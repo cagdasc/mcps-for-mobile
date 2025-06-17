@@ -1,0 +1,106 @@
+.kotlin
+.gradle
+**/build/
+xcuserdata
+!src/**/build/
+.idea
+captures
+.externalNativeBuild
+.cxx
+*.xcodeproj/*
+!*.xcodeproj/project.pbxproj
+!*.xcodeproj/xcshareddata/
+!*.xcodeproj/project.xcworkspace/
+!*.xcworkspace/contents.xcworkspacedata
+**/xcshareddata/WorkspaceSettings.xcsettings
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+shelf/
+# Deprecated, but good to have for older projects
+*.eml
+*.sublime-project
+*.sublime-workspace
+
+# Gradle
+.gradle/
+build/
+!build/generated/
+!build/generated-sources/ # Keep generated sources if they are part of the build process and not easily reproducible
+
+# Gradle Wrapper
+gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# Kotlin
+*.jar
+*.war
+*.ear
+*.kexe
+*.klib
+
+# Build artifacts
+# These are often in the 'build' directory, but good to list explicitly if they might appear elsewhere
+*.dmg
+*.exe
+*.msi
+*.deb
+*.rpm
+*.pkg
+*.app
+
+# Local properties
+local.properties
+*.env
+.env.*
+
+# Log files
+*.log
+logs/
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Secrets - It's good practice to never commit secrets.
+# If you have specific secret files, add them here.
+# For example:
+# secrets.properties
+# .env.secret
+
+# Mobile specific
+# Android
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+*.lock
+gen/
+bin/
+proguard/
+captures/
+*.keystore
+*.jks
+# iOS (if you ever add an iOS target)
+xcuserdata/
+DerivedData/
+*.hmap
+*.ipa
+*.dSYM/
+
+# Temporary files
+*.tmp
+*~
+*.bak
+*.swp
+
+# Hot reload files for Compose
+.compose/
