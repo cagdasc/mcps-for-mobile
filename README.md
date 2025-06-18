@@ -18,6 +18,24 @@ Android device, such as listing apps, opening apps, interacting with UI elements
 > Please be cautious when using natural language commands, especially those that could modify app state, interact with UI, or perform sensitive operations.  
 > It is recommended to use this tool in controlled environments, such as development devices or emulators.
 
+## 🎥 Demo
+
+The following demo shows how the AI agent performs a sequence of actions on an Android device using natural language.
+
+> **Prompt:**
+>
+> ```text
+> Find available android device,  
+> list installed apps,  
+> open "com.cacaosd.later.dev",  
+> dump ui and find Search tab and click it  
+> dump ui and find edittext for search and type "Google" and send done event,  
+> dump ui search result list and tap first element in result list which has title, description and date  
+> AS a result tell me what you see on screen and tell me which tool did you use
+> ```
+
+[android_demo.webm](https://github.com/user-attachments/assets/4e993976-7e87-495d-882f-29e086f7e3f0)
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing
