@@ -15,6 +15,7 @@ kotlin {
 
         commonMain.dependencies {
             implementation(project(":mcp:adb"))
+            implementation(project(":mcp:agent"))
 
             implementation(libs.ai.koog)
         }

@@ -34,3 +34,4 @@ plugins {
 
 include(":composeApp")
 include(":mcp:adb")
+include(":mcp:agent")
