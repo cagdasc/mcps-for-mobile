@@ -1,12 +1,15 @@
 package com.cacaosd.mcp.adb.layout_optimizer
 
+import com.cacaosd.mcp.adb.layout_optimizer.strategy.CollapseParentNodeStrategy
+import com.cacaosd.mcp.adb.layout_optimizer.strategy.NodeOptimisationStrategy
 import kotlinx.serialization.decodeFromString
 import nl.adaptivity.xmlutil.serialization.XML
 import java.io.File
 
-fun getLayoutOptimiser(xml: XML = xmlParser) = LayoutOptimiser(xml = xml)
+fun getLayoutOptimiser(xml: XML = xmlParser) =
+    LayoutOptimiser(xml = xml, nodeOptimisationStrategy = CollapseParentNodeStrategy())
 
-class LayoutOptimiser(private val xml: XML) {
+class LayoutOptimiser(private val xml: XML, private val nodeOptimisationStrategy: NodeOptimisationStrategy) {
 
     fun optimise(uiDumpFile: File): OptimisedHierarchy? {
         val uiText = uiDumpFile.readText()
@@ -16,10 +19,10 @@ class LayoutOptimiser(private val xml: XML) {
 
     private fun Hierarchy.toOptimizedUi(): OptimisedHierarchy? {
         val rotation = ScreenRotation.fromInt(rotation.toInt())
-        val cleanNode = node.cleanAndReindex()
+        val cleanNode = nodeOptimisationStrategy.optimise(node = node)
 
         // TODO: Handle null case and return meaningful message to agent
-        val root = cleanNode?.toUiElement() ?: return null
+        val root = cleanNode.toUiElement() ?: return null
         return OptimisedHierarchy(rotation = rotation, root = root)
     }
 
@@ -37,37 +40,6 @@ class LayoutOptimiser(private val xml: XML) {
             enabled = enabled,
             children = children
         )
-    }
-
-    private fun Node.cleanAndReindex(): Node? {
-        // Recursively clean children
-        val cleanedChildren = children.mapNotNull { it.cleanAndReindex() }
-
-        // Determine if this node is meaningful
-        val isMeaningful = text.isNotBlank()
-                || resourceId.isNotBlank()
-                || contentDesc.isNotBlank()
-                || clickable
-                || focusable
-                || !enabled
-
-        // Collapse meaningless parent with a single child
-        if (!isMeaningful && cleanedChildren.size == 1) {
-            return cleanedChildren.first()
-        }
-
-        // Remove node entirely if not meaningful and has no children
-        if (!isMeaningful && cleanedChildren.isEmpty()) {
-            return null
-        }
-
-        // Reindex children
-        val reIndexedChildren = cleanedChildren.mapIndexed { idx, child ->
-            child.copy(index = idx.toString())
-        }
-
-        // Return cleaned and re-indexed node
-        return this.copy(children = reIndexedChildren)
     }
 
     private fun String.toRect(): Rect? {
