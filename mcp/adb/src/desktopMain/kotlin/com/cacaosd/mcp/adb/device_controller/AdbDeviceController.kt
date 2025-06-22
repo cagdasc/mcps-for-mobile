@@ -12,7 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-actual fun getDeviceControllerTools(): DeviceControllerTools =
+actual fun getAdbDeviceControllerTools(): DeviceControllerTools =
     AdbDeviceController(adb = getAdb(), layoutOptimiser = getLayoutOptimiser())
 
 @LLMDescription(

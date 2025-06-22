@@ -19,4 +19,4 @@ interface DeviceControllerTools : ToolSet {
     suspend fun sendKeyEvent(key: String, serial: String?): String
 }
 
-expect fun getDeviceControllerTools(): DeviceControllerTools
+expect fun getAdbDeviceControllerTools(): DeviceControllerTools

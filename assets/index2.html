@@ -1,0 +1,410 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Color Palette Viewer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+          --font-family-sans: 'Inter', sans-serif;
+        }
+
+        /* Light Theme Variables */
+        body.light-theme {
+          --page-bg: #FAFAFA;
+          --page-text: #1C1C1C;
+          --accent-color: #25D366;
+          --card-bg: #FFFFFF;
+          --card-border: #BDBDBD;
+          --switcher-bg: #FFFFFF;
+          --switcher-border: #BDBDBD;
+          --switcher-button-hover-bg: #F0F0F0;
+          --switcher-button-active-bg: #25D366;
+          --switcher-button-active-text: #FFFFFF;
+          --section-title-border: #E0E0E0;
+          --footer-border: #E0E0E0;
+          --footer-text: rgba(0,0,0,0.7);
+        }
+
+        /* Dark Theme Variables */
+        body.dark-theme {
+          --page-bg: #121212;
+          --page-text: #E0E0E0;
+          --accent-color: #6CDE7E;
+          --card-bg: #1E1E1E;
+          --card-border: #424242;
+          --switcher-bg: #1E1E1E;
+          --switcher-border: #424242;
+          --switcher-button-hover-bg: #2C2C2C;
+          --switcher-button-active-bg: #6CDE7E;
+          --switcher-button-active-text: #003910; /* Dark text for better contrast on dark accent */
+          --section-title-border: #333333;
+          --footer-border: #333333;
+          --footer-text: rgba(255,255,255,0.7);
+        }
+
+        body {
+          font-family: var(--font-family-sans);
+          background-color: var(--page-bg);
+          color: var(--page-text);
+          transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+          min-height: 100vh;
+        }
+
+        ::-webkit-scrollbar {
+          width: 8px;
+          height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+          background: var(--card-bg); /* Use a theme-dependent color */
+        }
+        ::-webkit-scrollbar-thumb {
+          background-color: #555;
+          border-radius: 4px;
+          border: 2px solid var(--card-bg);
+        }
+        ::-webkit-scrollbar-thumb:hover {
+          background-color: var(--accent-color);
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        .header-title { color: var(--accent-color); }
+        .theme-switcher { background-color: var(--switcher-bg); border: 1px solid var(--switcher-border); }
+        .theme-switcher button { transition: background-color 0.2s, color 0.2s; }
+        .theme-switcher button:hover:not(.active) { background-color: var(--switcher-button-hover-bg); }
+        .theme-switcher button.active { background-color: var(--switcher-button-active-bg); color: var(--switcher-button-active-text); }
+        .color-section { background-color: var(--card-bg); border: 1px solid var(--card-border); }
+        .color-section-title { border-bottom: 1px solid var(--section-title-border); color: var(--page-text); }
+        .color-swatch-card { background-color: var(--card-bg); border: 1px solid var(--card-border); }
+        .footer { border-top: 1px solid var(--footer-border); color: var(--footer-text); }
+
+    </style>
+    <script type="importmap">
+        {
+          "imports": {
+            "react": "https://esm.sh/react@^19.1.0",
+            "react/": "https://esm.sh/react@^19.1.0/"
+          }
+        }
+    </script>
+</head>
+<body class="light-theme">
+<div class="p-4 md:p-8">
+    <header class="mb-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <h1 class="text-3xl md:text-4xl font-bold header-title">
+            App Color Palette Viewer
+        </h1>
+        <div id="theme-switcher-container" class="theme-switcher flex space-x-1 p-1 rounded-lg">
+            <button id="light-theme-button" class="p-2 rounded-md flex items-center justify-center space-x-2 w-24" aria-label="Switch to light theme">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-6.364-.386 1.591-1.591M3 12h2.25m.386-6.364 1.591 1.591" /></svg>
+                <span>Light</span>
+            </button>
+            <button id="dark-theme-button" class="p-2 rounded-md flex items-center justify-center space-x-2 w-24" aria-label="Switch to dark theme">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z" /></svg>
+                <span>Dark</span>
+            </button>
+        </div>
+    </header>
+
+    <main id="main-content">
+        <div class="mb-10">
+            <h2 class="text-2xl font-semibold mb-3 page-text-color">Main Color Scheme</h2>
+            <div id="main-scheme-palettes"></div>
+        </div>
+
+        <div class="mb-10">
+            <h2 class="text-2xl font-semibold mb-3 page-text-color">Chat Color Scheme</h2>
+            <div id="chat-scheme-palettes"></div>
+        </div>
+
+        <div>
+            <h2 class="text-2xl font-semibold mb-3 page-text-color">Extended Surfaces Scheme</h2>
+            <div id="extended-surfaces-palettes"></div>
+        </div>
+    </main>
+
+    <footer class="footer mt-12 pt-6 text-center text-sm">
+        <p>&copy; <span id="current-year"></span> Color Palette Viewer. Inspired by WhatsApp-like themes.</p>
+    </footer>
+</div>
+
+<script>
+    // --- COLOR DATA (Adapted from constants/colors.ts) ---
+    const getContrastingTextColor = (hexColor) => {
+      if (!hexColor || hexColor.length < 7) return '#000000';
+      const r = parseInt(hexColor.slice(1, 3), 16);
+      const g = parseInt(hexColor.slice(3, 5), 16);
+      const b = parseInt(hexColor.slice(5, 7), 16);
+      const brightness = Math.round((r * 299 + g * 587 + b * 114) / 1000);
+      return brightness > 125 ? '#000000' : '#FFFFFF';
+    };
+
+    const commonRaw = {
+      scrimLightAlpha: "#00000080",
+      scrimDarkAlpha: "#000000B3",
+    };
+
+    const lightRaw = {
+      primary: "#25D366", onPrimary: "#FFFFFF", primaryContainer: "#A8F0C0", onPrimaryContainer: "#004C1A", inversePrimary: "#6CDE7E",
+      secondary: "#006D3E", onSecondary: "#FFFFFF", secondaryContainer: "#97F0B8", onSecondaryContainer: "#00210D",
+      tertiary: "#006C4A", onTertiary: "#FFFFFF", tertiaryContainer: "#87F7C4", onTertiaryContainer: "#002114",
+      background: "#FAFAFA", onBackground: "#1C1C1C", surface: "#FFFFFF", onSurface: "#121212",
+      surfaceVariant: "#F0F0F0", onSurfaceVariant: "#424242", surfaceTint: "#25D366",
+      inverseSurface: "#2C2C2C", inverseOnSurface: "#F5F5F5",
+      error: "#BA1A1A", onError: "#FFFFFF", errorContainer: "#FFDAD6", onErrorContainer: "#410002",
+      outline: "#757575", outlineVariant: "#BDBDBD", scrim: commonRaw.scrimLightAlpha,
+      chatBackground: "#ECE5DD", sentMessageBackground: "#DCF8C6", receivedMessageBackground: "#FFFFFF",
+      surfaceDim: "#E0E0E0", surfaceBright: "#F5F5F5", surfaceContainer: "#F1F1F1",
+      surfaceContainerLow: "#F7F7F7", surfaceContainerLowest: "#FFFFFF", surfaceContainerHigh: "#EBEBEB",
+      surfaceContainerHighest: "#E5E5E5",
+    };
+
+    const darkRaw = {
+      primary: "#6CDE7E", onPrimary: "#003910", primaryContainer: "#005317", onPrimaryContainer: "#87F7A4", inversePrimary: "#25D366",
+      secondary: "#7CDA9D", onSecondary: "#003920", secondaryContainer: "#00522E", onSecondaryContainer: "#97F0B8",
+      tertiary: "#6BDBA7", onTertiary: "#003826", tertiaryContainer: "#005338", onTertiaryContainer: "#87F7C4",
+      background: "#121212", onBackground: "#E0E0E0", surface: "#1E1E1E", onSurface: "#E0E0E0",
+      surfaceVariant: "#2C2C2C", onSurfaceVariant: "#B0B0B0", surfaceTint: "#6CDE7E",
+      inverseSurface: "#F5F5F5", inverseOnSurface: "#121212",
+      error: "#FFB4AB", onError: "#690005", errorContainer: "#93000A", onErrorContainer: "#FFDAD6",
+      outline: "#8C8C8C", outlineVariant: "#424242", scrim: commonRaw.scrimDarkAlpha,
+      chatBackground: "#121212", sentMessageBackground: "#075E54", receivedMessageBackground: "#262D31",
+      surfaceDim: "#121212", surfaceBright: "#2C2C2C", surfaceContainer: "#1E1E1E",
+      surfaceContainerLow: "#191919", surfaceContainerLowest: "#0E0E0E", surfaceContainerHigh: "#292929",
+      surfaceContainerHighest: "#333333",
+    };
+
+    const lightThemeData = {
+      mode: 'light', name: "Light Theme",
+      backgroundColor: lightRaw.background, textColor: lightRaw.onBackground, accentColor: lightRaw.primary,
+      cardBackgroundColor: lightRaw.surface, cardBorderColor: lightRaw.outlineVariant,
+      groups: {
+        mainScheme: [
+          { title: "Primary", colors: [
+            { name: "Primary", kotlinName: "primary", hex: lightRaw.primary, textColor: lightRaw.onPrimary },
+            { name: "On Primary", kotlinName: "onPrimary", hex: lightRaw.onPrimary, textColor: getContrastingTextColor(lightRaw.onPrimary) },
+            { name: "Primary C.", kotlinName: "primaryContainer", hex: lightRaw.primaryContainer, textColor: lightRaw.onPrimaryContainer }, // Abbreviated for space
+            { name: "On Primary C.", kotlinName: "onPrimaryContainer", hex: lightRaw.onPrimaryContainer, textColor: getContrastingTextColor(lightRaw.onPrimaryContainer) },
+            { name: "Inverse Primary", kotlinName: "inversePrimary", hex: lightRaw.inversePrimary, textColor: getContrastingTextColor(lightRaw.inversePrimary) },
+          ]},
+          { title: "Secondary", colors: [
+            { name: "Secondary", kotlinName: "secondary", hex: lightRaw.secondary, textColor: lightRaw.onSecondary },
+            { name: "On Secondary", kotlinName: "onSecondary", hex: lightRaw.onSecondary, textColor: getContrastingTextColor(lightRaw.onSecondary) },
+            { name: "Secondary C.", kotlinName: "secondaryContainer", hex: lightRaw.secondaryContainer, textColor: lightRaw.onSecondaryContainer },
+            { name: "On Secondary C.", kotlinName: "onSecondaryContainer", hex: lightRaw.onSecondaryContainer, textColor: getContrastingTextColor(lightRaw.onSecondaryContainer) },
+          ]},
+          { title: "Tertiary", colors: [
+            { name: "Tertiary", kotlinName: "tertiary", hex: lightRaw.tertiary, textColor: lightRaw.onTertiary },
+            { name: "On Tertiary", kotlinName: "onTertiary", hex: lightRaw.onTertiary, textColor: getContrastingTextColor(lightRaw.onTertiary) },
+            { name: "Tertiary C.", kotlinName: "tertiaryContainer", hex: lightRaw.tertiaryContainer, textColor: lightRaw.onTertiaryContainer },
+            { name: "On Tertiary C.", kotlinName: "onTertiaryContainer", hex: lightRaw.onTertiaryContainer, textColor: getContrastingTextColor(lightRaw.onTertiaryContainer) },
+          ]},
+          { title: "Background & Surface", colors: [
+            { name: "Background", kotlinName: "background", hex: lightRaw.background, textColor: lightRaw.onBackground },
+            { name: "On Background", kotlinName: "onBackground", hex: lightRaw.onBackground, textColor: getContrastingTextColor(lightRaw.onBackground) },
+            { name: "Surface", kotlinName: "surface", hex: lightRaw.surface, textColor: lightRaw.onSurface },
+            { name: "On Surface", kotlinName: "onSurface", hex: lightRaw.onSurface, textColor: getContrastingTextColor(lightRaw.onSurface) },
+            { name: "Surface Variant", kotlinName: "surfaceVariant", hex: lightRaw.surfaceVariant, textColor: lightRaw.onSurfaceVariant },
+            { name: "On Surface Var.", kotlinName: "onSurfaceVariant", hex: lightRaw.onSurfaceVariant, textColor: getContrastingTextColor(lightRaw.onSurfaceVariant) },
+            { name: "Surface Tint", kotlinName: "surfaceTint", hex: lightRaw.surfaceTint, textColor: getContrastingTextColor(lightRaw.surfaceTint) },
+            { name: "Inverse Surface", kotlinName: "inverseSurface", hex: lightRaw.inverseSurface, textColor: lightRaw.inverseOnSurface },
+            { name: "Inv. On Surface", kotlinName: "inverseOnSurface", hex: lightRaw.inverseOnSurface, textColor: getContrastingTextColor(lightRaw.inverseOnSurface) },
+          ]},
+          { title: "Error", colors: [
+            { name: "Error", kotlinName: "error", hex: lightRaw.error, textColor: lightRaw.onError },
+            { name: "On Error", kotlinName: "onError", hex: lightRaw.onError, textColor: getContrastingTextColor(lightRaw.onError) },
+            { name: "Error Container", kotlinName: "errorContainer", hex: lightRaw.errorContainer, textColor: lightRaw.onErrorContainer },
+            { name: "On Error C.", kotlinName: "onErrorContainer", hex: lightRaw.onErrorContainer, textColor: getContrastingTextColor(lightRaw.onErrorContainer) },
+          ]},
+          { title: "Outline & Scrim", colors: [
+            { name: "Outline", kotlinName: "outline", hex: lightRaw.outline, textColor: getContrastingTextColor(lightRaw.outline) },
+            { name: "Outline Variant", kotlinName: "outlineVariant", hex: lightRaw.outlineVariant, textColor: getContrastingTextColor(lightRaw.outlineVariant) },
+            { name: "Scrim", kotlinName: "scrim", hex: lightRaw.scrim, textColor: "#FFFFFF" },
+          ]},
+        ],
+        chatScheme: [
+          { title: "Chat Colors (Light)", colors: [
+            { name: "Chat Background", kotlinName: "LightChatBackground", hex: lightRaw.chatBackground, textColor: getContrastingTextColor(lightRaw.chatBackground) },
+            { name: "Sent Message BG", kotlinName: "LightSentMessageBackground", hex: lightRaw.sentMessageBackground, textColor: getContrastingTextColor(lightRaw.sentMessageBackground) },
+            { name: "Received Msg BG", kotlinName: "LightReceivedMessageBackground", hex: lightRaw.receivedMessageBackground, textColor: getContrastingTextColor(lightRaw.receivedMessageBackground) },
+          ]}
+        ],
+        extendedSurfaces: [
+          { title: "Extended Surfaces (Light)", colors: [
+            { name: "Surface Dim", kotlinName: "surfaceDim", hex: lightRaw.surfaceDim, textColor: getContrastingTextColor(lightRaw.surfaceDim) },
+            { name: "Surface Bright", kotlinName: "surfaceBright", hex: lightRaw.surfaceBright, textColor: getContrastingTextColor(lightRaw.surfaceBright) },
+            { name: "Surface Cont.", kotlinName: "surfaceContainer", hex: lightRaw.surfaceContainer, textColor: getContrastingTextColor(lightRaw.surfaceContainer) },
+            { name: "Surface C. Low", kotlinName: "surfaceContainerLow", hex: lightRaw.surfaceContainerLow, textColor: getContrastingTextColor(lightRaw.surfaceContainerLow) },
+            { name: "Surface C. Lowest", kotlinName: "surfaceContainerLowest", hex: lightRaw.surfaceContainerLowest, textColor: getContrastingTextColor(lightRaw.surfaceContainerLowest) },
+            { name: "Surface C. High", kotlinName: "surfaceContainerHigh", hex: lightRaw.surfaceContainerHigh, textColor: getContrastingTextColor(lightRaw.surfaceContainerHigh) },
+            { name: "Surface C. Highest", kotlinName: "surfaceContainerHighest", hex: lightRaw.surfaceContainerHighest, textColor: getContrastingTextColor(lightRaw.surfaceContainerHighest) },
+          ]}
+        ]
+      }
+    };
+
+    const darkThemeData = {
+      mode: 'dark', name: "Dark Theme",
+      backgroundColor: darkRaw.background, textColor: darkRaw.onBackground, accentColor: darkRaw.primary,
+      cardBackgroundColor: darkRaw.surface, cardBorderColor: darkRaw.outlineVariant,
+      groups: {
+        mainScheme: [
+          { title: "Primary", colors: [
+            { name: "Primary", kotlinName: "primary", hex: darkRaw.primary, textColor: darkRaw.onPrimary },
+            { name: "On Primary", kotlinName: "onPrimary", hex: darkRaw.onPrimary, textColor: getContrastingTextColor(darkRaw.onPrimary) },
+            { name: "Primary C.", kotlinName: "primaryContainer", hex: darkRaw.primaryContainer, textColor: darkRaw.onPrimaryContainer },
+            { name: "On Primary C.", kotlinName: "onPrimaryContainer", hex: darkRaw.onPrimaryContainer, textColor: getContrastingTextColor(darkRaw.onPrimaryContainer) },
+            { name: "Inverse Primary", kotlinName: "inversePrimary", hex: darkRaw.inversePrimary, textColor: getContrastingTextColor(darkRaw.inversePrimary) },
+          ]},
+          { title: "Secondary", colors: [
+            { name: "Secondary", kotlinName: "secondary", hex: darkRaw.secondary, textColor: darkRaw.onSecondary },
+            { name: "On Secondary", kotlinName: "onSecondary", hex: darkRaw.onSecondary, textColor: getContrastingTextColor(darkRaw.onSecondary) },
+            { name: "Secondary C.", kotlinName: "secondaryContainer", hex: darkRaw.secondaryContainer, textColor: darkRaw.onSecondaryContainer },
+            { name: "On Secondary C.", kotlinName: "onSecondaryContainer", hex: darkRaw.onSecondaryContainer, textColor: getContrastingTextColor(darkRaw.onSecondaryContainer) },
+          ]},
+           { title: "Tertiary", colors: [
+            { name: "Tertiary", kotlinName: "tertiary", hex: darkRaw.tertiary, textColor: darkRaw.onTertiary },
+            { name: "On Tertiary", kotlinName: "onTertiary", hex: darkRaw.onTertiary, textColor: getContrastingTextColor(darkRaw.onTertiary) },
+            { name: "Tertiary C.", kotlinName: "tertiaryContainer", hex: darkRaw.tertiaryContainer, textColor: darkRaw.onTertiaryContainer },
+            { name: "On Tertiary C.", kotlinName: "onTertiaryContainer", hex: darkRaw.onTertiaryContainer, textColor: getContrastingTextColor(darkRaw.onTertiaryContainer) },
+          ]},
+          { title: "Background & Surface", colors: [
+            { name: "Background", kotlinName: "background", hex: darkRaw.background, textColor: darkRaw.onBackground },
+            { name: "On Background", kotlinName: "onBackground", hex: darkRaw.onBackground, textColor: getContrastingTextColor(darkRaw.onBackground) },
+            { name: "Surface", kotlinName: "surface", hex: darkRaw.surface, textColor: darkRaw.onSurface },
+            { name: "On Surface", kotlinName: "onSurface", hex: darkRaw.onSurface, textColor: getContrastingTextColor(darkRaw.onSurface) },
+            { name: "Surface Variant", kotlinName: "surfaceVariant", hex: darkRaw.surfaceVariant, textColor: darkRaw.onSurfaceVariant },
+            { name: "On Surface Var.", kotlinName: "onSurfaceVariant", hex: darkRaw.onSurfaceVariant, textColor: getContrastingTextColor(darkRaw.onSurfaceVariant) },
+            { name: "Surface Tint", kotlinName: "surfaceTint", hex: darkRaw.surfaceTint, textColor: getContrastingTextColor(darkRaw.surfaceTint) },
+            { name: "Inverse Surface", kotlinName: "inverseSurface", hex: darkRaw.inverseSurface, textColor: darkRaw.inverseOnSurface },
+            { name: "Inv. On Surface", kotlinName: "inverseOnSurface", hex: darkRaw.inverseOnSurface, textColor: getContrastingTextColor(darkRaw.inverseOnSurface) },
+          ]},
+          { title: "Error", colors: [
+            { name: "Error", kotlinName: "error", hex: darkRaw.error, textColor: darkRaw.onError },
+            { name: "On Error", kotlinName: "onError", hex: darkRaw.onError, textColor: getContrastingTextColor(darkRaw.onError) },
+            { name: "Error Container", kotlinName: "errorContainer", hex: darkRaw.errorContainer, textColor: darkRaw.onErrorContainer },
+            { name: "On Error C.", kotlinName: "onErrorContainer", hex: darkRaw.onErrorContainer, textColor: getContrastingTextColor(darkRaw.onErrorContainer) },
+          ]},
+          { title: "Outline & Scrim", colors: [
+            { name: "Outline", kotlinName: "outline", hex: darkRaw.outline, textColor: getContrastingTextColor(darkRaw.outline) },
+            { name: "Outline Variant", kotlinName: "outlineVariant", hex: darkRaw.outlineVariant, textColor: getContrastingTextColor(darkRaw.outlineVariant) },
+            { name: "Scrim", kotlinName: "scrim", hex: darkRaw.scrim, textColor: "#FFFFFF" },
+          ]},
+        ],
+        chatScheme: [
+           { title: "Chat Colors (Dark)", colors: [
+            { name: "Chat Background", kotlinName: "DarkChatBackground", hex: darkRaw.chatBackground, textColor: getContrastingTextColor(darkRaw.chatBackground) },
+            { name: "Sent Message BG", kotlinName: "DarkSentMessageBackground", hex: darkRaw.sentMessageBackground, textColor: getContrastingTextColor(darkRaw.sentMessageBackground) },
+            { name: "Received Msg BG", kotlinName: "DarkReceivedMessageBackground", hex: darkRaw.receivedMessageBackground, textColor: getContrastingTextColor(darkRaw.receivedMessageBackground) },
+          ]}
+        ],
+        extendedSurfaces: [
+          { title: "Extended Surfaces (Dark)", colors: [
+            { name: "Surface Dim", kotlinName: "surfaceDim", hex: darkRaw.surfaceDim, textColor: getContrastingTextColor(darkRaw.surfaceDim) },
+            { name: "Surface Bright", kotlinName: "surfaceBright", hex: darkRaw.surfaceBright, textColor: getContrastingTextColor(darkRaw.surfaceBright) },
+            { name: "Surface Cont.", kotlinName: "surfaceContainer", hex: darkRaw.surfaceContainer, textColor: getContrastingTextColor(darkRaw.surfaceContainer) },
+            { name: "Surface C. Low", kotlinName: "surfaceContainerLow", hex: darkRaw.surfaceContainerLow, textColor: getContrastingTextColor(darkRaw.surfaceContainerLow) },
+            { name: "Surface C. Lowest", kotlinName: "surfaceContainerLowest", hex: darkRaw.surfaceContainerLowest, textColor: getContrastingTextColor(darkRaw.surfaceContainerLowest) },
+            { name: "Surface C. High", kotlinName: "surfaceContainerHigh", hex: darkRaw.surfaceContainerHigh, textColor: getContrastingTextColor(darkRaw.surfaceContainerHigh) },
+            { name: "Surface C. Highest", kotlinName: "surfaceContainerHighest", hex: darkRaw.surfaceContainerHighest, textColor: getContrastingTextColor(darkRaw.surfaceContainerHighest) },
+          ]}
+        ]
+      }
+    };
+
+    // --- DOM Elements ---
+    let lightThemeButton, darkThemeButton;
+    let mainSchemePalettesContainer, chatSchemePalettesContainer, extendedSurfacesPalettesContainer;
+
+    // --- State ---
+    let currentThemeMode = 'light';
+
+    // --- Helper function to create a color swatch element ---
+    function createColorSwatchHTML(colorDef) {
+      let swatchBgStyle;
+      if (colorDef.hex.length === 9) { // #RRGGBBAA
+        const r = parseInt(colorDef.hex.slice(1, 3), 16);
+        const g = parseInt(colorDef.hex.slice(3, 5), 16);
+        const b = parseInt(colorDef.hex.slice(5, 7), 16);
+        const a = parseInt(colorDef.hex.slice(7, 9), 16) / 255;
+        swatchBgStyle = `background-color: rgba(${r}, ${g}, ${b}, ${a});`;
+      } else {
+        swatchBgStyle = `background-color: ${colorDef.hex};`;
+      }
+
+      return `
+        <div class="color-swatch-card p-3 rounded-lg shadow-md transition-all duration-300 ease-in-out hover:shadow-xl">
+          <div
+            class="w-full h-24 rounded-md mb-2 flex items-center justify-center text-xs font-mono shadow-inner"
+            style="${swatchBgStyle} color: ${colorDef.textColor};"
+            title="Kotlin name: ${colorDef.kotlinName}\nHex: ${colorDef.hex}"
+          >
+            <!-- Color Name on Swatch (Optional) -->
+          </div>
+          <h4 class="font-semibold text-sm truncate page-text-color" title="${colorDef.name}">${colorDef.name}</h4>
+          <p class="text-xs opacity-70 break-all page-text-color">${colorDef.hex}</p>
+          <p class="text-xs opacity-50 italic truncate page-text-color" title="${colorDef.kotlinName}">${colorDef.kotlinName}</p>
+        </div>
+      `;
+    }
+
+    // --- Helper function to create a color group section ---
+    function createColorGroupHTML(group) {
+      const colorsHTML = group.colors.map(color => createColorSwatchHTML(color)).join('');
+      return `
+        <section class="color-section mb-8 p-4 rounded-xl shadow-lg">
+          <h3 class="color-section-title text-xl font-semibold mb-4 pb-2">${group.title}</h3>
+          <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
+            ${colorsHTML}
+          </div>
+        </section>
+      `;
+    }
+
+    // --- Render function ---
+    function renderPalettes(themeData) {
+      mainSchemePalettesContainer.innerHTML = themeData.groups.mainScheme.map(group => createColorGroupHTML(group)).join('');
+      chatSchemePalettesContainer.innerHTML = themeData.groups.chatScheme.map(group => createColorGroupHTML(group)).join('');
+      extendedSurfacesPalettesContainer.innerHTML = themeData.groups.extendedSurfaces.map(group => createColorGroupHTML(group)).join('');
+    }
+
+    // --- Theme Switcher Logic ---
+    function setTheme(themeName) {
+      currentThemeMode = themeName;
+      document.body.className = `${themeName}-theme`; // Applies theme variables from CSS
+
+      if (themeName === 'light') {
+        lightThemeButton.classList.add('active', 'shadow-md');
+        darkThemeButton.classList.remove('active', 'shadow-md');
+        renderPalettes(lightThemeData);
+      } else {
+        darkThemeButton.classList.add('active', 'shadow-md');
+        lightThemeButton.classList.remove('active', 'shadow-md');
+        renderPalettes(darkThemeData);
+      }
+    }
+
+    // --- Initialization ---
+    document.addEventListener('DOMContentLoaded', () => {
+      lightThemeButton = document.getElementById('light-theme-button');
+      darkThemeButton = document.getElementById('dark-theme-button');
+      mainSchemePalettesContainer = document.getElementById('main-scheme-palettes');
+      chatSchemePalettesContainer = document.getElementById('chat-scheme-palettes');
+      extendedSurfacesPalettesContainer = document.getElementById('extended-surfaces-palettes');
+
+      document.getElementById('current-year').textContent = new Date().getFullYear();
+
+      lightThemeButton.addEventListener('click', () => setTheme('light'));
+      darkThemeButton.addEventListener('click', () => setTheme('dark'));
+
+      // Set initial theme (e.g., light or from localStorage if you implement persistence)
+      const preferredTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      // setTheme(preferredTheme); // You can use this for system preference
+      setTheme('light'); // Or default to light
+    });
+</script>
+</body>
+</html>

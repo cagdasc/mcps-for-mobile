@@ -1,51 +1,54 @@
 package com.cacaosd.mcps_for_mobile
 
-import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.reflect.asTools
-import ai.koog.agents.features.eventHandler.feature.EventHandler
-import ai.koog.agents.features.tokenizer.feature.MessageTokenizer
-import ai.koog.prompt.executor.clients.google.GoogleModels
-import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
-import com.cacaosd.mcp.adb.device_controller.getDeviceControllerTools
-import com.cacaosd.mcp.agent.getGoogleAgent
-import com.cacaosd.mcp.agent.toolExecutionStrategy
+import androidx.compose.ui.window.Window
+import androidx.compose.ui.window.application
+import com.cacaosd.mcp.agent.client.AgentClientBuilder
+import com.cacaosd.mcp.agent.event.AgentEvent
+import com.cacaosd.mcps_for_mobile.di.*
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import org.koin.core.context.startKoin
+import org.koin.mp.KoinPlatform.getKoin
 
-fun main() = runBlocking {
-    delay(2_000)
+fun main() = application {
+    Window(
+        onCloseRequest = ::exitApplication,
+        title = "MCPs for mobile",
+    ) {
+        App()
+    }
+}
+
+fun main2() = runBlocking {
+    startKoin {
+        modules(mainModule, featureModule)
+    }
+
     val systemPrompt =
         """
             You are a helpful AI assistant that can interact with android emulator. 
             So you don't expect direction, you can give your own decision.
         """.trimIndent()
 
-    val agent = getGoogleAgent(
-        systemPrompt = systemPrompt,
-        llmModel = GoogleModels.Gemini2_0Flash,
-        toolRegistry = ToolRegistry {
-            tools(getDeviceControllerTools().asTools())
-        },
-        strategy = toolExecutionStrategy("Adb tool execution strategy"),
-        apiKey = localProperties.getProperty("GEMINI_API_KEY"),
-        installFeatures = {
-            install(EventHandler) {
-                onToolCall { tool, toolArgs ->
-                    println("Tool called: ${tool.name} with args $toolArgs")
-                }
+    val googleAgentBuilder: AgentClientBuilder = getKoin().get(GoogleAgentQualifier)
+    val metaAgentBuilder: AgentClientBuilder = getKoin().get(MetaAgentQualifier)
 
-                onToolCallResult { tool, toolArgs, result ->
-                    println("Tool call result: ${tool.name} with args $toolArgs and result: ${result?.toStringDefault()}")
-                }
-            }
+    val googleAgent = googleAgentBuilder.withSystemPrompt(systemPrompt).build()
+    val metaAgent = metaAgentBuilder.withSystemPrompt(systemPrompt).build()
 
-            install(MessageTokenizer) {
-                tokenizer = SimpleRegexBasedTokenizer()
-            }
+    val messageFlow: MutableSharedFlow<AgentEvent> = getKoin().get(AgentMessageFlowQualifier)
+
+    launch {
+        messageFlow.collect {
+            println(it.toString())
         }
-    )
+    }
 
-    agent.run(
+    delay(2_000)
+
+    googleAgent.run(
         """
         Find available android device,
         list installed apps,
