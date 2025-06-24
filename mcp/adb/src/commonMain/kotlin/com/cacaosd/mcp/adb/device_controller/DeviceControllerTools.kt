@@ -17,6 +17,12 @@ interface DeviceControllerTools : ToolSet {
     suspend fun tap(x: Int, y: Int, serial: String?): String
 
     suspend fun sendKeyEvent(key: String, serial: String?): String
+
+    suspend fun deviceSize(serial: String?): String
+
+    suspend fun screenshot(serial: String?): String
+
+    suspend fun swipe(startX: Int, startY: Int, endX: Int, endY: Int, durationMs: Long = 300, serial: String?): String
 }
 
 expect fun getAdbDeviceControllerTools(): DeviceControllerTools

@@ -4,36 +4,58 @@ import ai.koog.agents.core.tools.annotations.LLMDescription
 import ai.koog.agents.core.tools.annotations.Tool
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.IDevice
-import com.cacaosd.mcp.adb.getMcpAdbPath
-import com.cacaosd.mcp.adb.initConfigDirectory
+import com.cacaosd.mcp.adb.AppConfigManager
 import com.cacaosd.mcp.adb.layout_optimizer.LayoutOptimiser
 import com.cacaosd.mcp.adb.layout_optimizer.getLayoutOptimiser
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import java.io.File
+import kotlinx.datetime.Clock
 
 actual fun getAdbDeviceControllerTools(): DeviceControllerTools =
-    AdbDeviceController(adb = getAdb(), layoutOptimiser = getLayoutOptimiser())
+    AdbDeviceController(
+        adb = getAdb(), layoutOptimiser = getLayoutOptimiser(), appConfigManager = AppConfigManager(
+            appName = "mcpformobile",
+            appVersion = "0.0.1"
+        )
+    )
 
 @LLMDescription(
     "Tools for control Android device via Android Device Bridge(adb) which is a " +
             "commandline executable to run commands for android devices"
 )
-class AdbDeviceController(private val adb: AndroidDebugBridge, private val layoutOptimiser: LayoutOptimiser) :
+class AdbDeviceController(
+    private val adb: AndroidDebugBridge,
+    private val layoutOptimiser: LayoutOptimiser,
+    private val appConfigManager: AppConfigManager
+) :
     DeviceControllerTools {
 
     init {
-        initConfigDirectory()
+        // Initialize configuration
+        if (appConfigManager.initialize()) {
+            println("✅ Configuration initialized successfully")
+
+            // Check if first run
+            if (appConfigManager.isFirstRun()) {
+                println("👋 Welcome! This is your first time running the app.")
+                // Perform first-run setup
+                appConfigManager.markFirstRunCompleted()
+            }
+        }
     }
 
     @Tool("list_connected_devices")
-    @LLMDescription("Returns the serial numbers of all Android devices currently connected via ADB.")
+    @LLMDescription(
+        "Retrieves the serial numbers of all Android devices and emulators currently connected " +
+                "to the local development machine via ADB"
+    )
     override suspend fun listConnectedDevices(): List<String> = withContext(Dispatchers.IO) {
         adb.devices.map { it.serialNumber }
     }
 
     @Tool("list_installed_packages")
-    @LLMDescription("Lists all installed packages on the specified Android device. If no device is specified, the first connected device is used.")
+    @LLMDescription("Retrieves all package names of applications installed on the specified device (defaults to the first connected device if omitted).")
     override suspend fun listInstalledPackages(serial: String?): List<String> = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext emptyList()
         val shellOutputReceiver = CollectingReceiver()
@@ -42,7 +64,7 @@ class AdbDeviceController(private val adb: AndroidDebugBridge, private val layou
     }
 
     @Tool("launch_app_by_package")
-    @LLMDescription("Launches an Android app by its package name on the specified device. Uses the 'monkey' tool to simulate an app launch.")
+    @LLMDescription("Launches an Android app by its package name on the specified device.")
     override suspend fun launchApp(packageName: String, serial: String?): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
         val cmd = "monkey -p $packageName -c android.intent.category.LAUNCHER 1"
@@ -52,18 +74,18 @@ class AdbDeviceController(private val adb: AndroidDebugBridge, private val layou
     }
 
     @Tool("get_ui_dump")
-    @LLMDescription("Retrieves the current UI hierarchy (in XML) from the Android device using uiautomator.")
+    @LLMDescription("Retrieves the current UI hierarchy (in XML) from the Android device.")
     override suspend fun getUiDump(serial: String?): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
 
-        val timestamp = System.currentTimeMillis()
+        val timestamp = Clock.System.now().epochSeconds
         val xmlName = "uidump_$timestamp.xml"
         val remotePath = "/sdcard/$xmlName"
 
         val dumpReceiver = CollectingReceiver()
         device.executeShellCommand("uiautomator dump $remotePath", dumpReceiver)
 
-        val localDumpFile = File(getMcpAdbPath(), xmlName)
+        val localDumpFile = appConfigManager.getUiDumpFile(filename = xmlName).toFile()
         device.pullFile(remotePath, localDumpFile.absolutePath)
 
         // TODO: Return structured format
@@ -96,6 +118,56 @@ class AdbDeviceController(private val adb: AndroidDebugBridge, private val layou
         val keyCode = keyEventMap[key.lowercase()] ?: return@withContext "Unsupported key: $key"
         device.executeShellCommand("input keyevent $keyCode", CollectingReceiver())
         "Sent key event: $key"
+    }
+
+    @Tool("device_size")
+    @LLMDescription("Get device size on the specified device.")
+    override suspend fun deviceSize(serial: String?): String = withContext(Dispatchers.IO) {
+        val device = getDevice(serial) ?: return@withContext "Device not found"
+        val receiver = CollectingReceiver()
+        device.executeShellCommand("wm size", receiver)
+        receiver.result
+    }
+
+    @Tool("device_screenshot")
+    @LLMDescription("It captures screenshot of current screen on Android device and save it to local development machine.")
+    override suspend fun screenshot(serial: String?): String = withContext(Dispatchers.IO) {
+        val device = getDevice(serial) ?: return@withContext "Device not found"
+        val screenshotsPath = appConfigManager.screenshotsDir.toAbsolutePath().toString()
+        val timestamp = Clock.System.now().epochSeconds
+
+        device.executeShellCommand(
+            "screencap -p /sdcard/Pictures/${timestamp}.png",
+            CollectingReceiver()
+        )
+        delay(200)
+        device.pullFile("/sdcard/Pictures/${timestamp}.png", "$screenshotsPath/${timestamp}.png")
+        delay(200)
+        device.executeShellCommand(
+            "rm /sdcard/Pictures/${timestamp}.png",
+            CollectingReceiver()
+        )
+
+        "Screenshot file name is ${timestamp}.png"
+    }
+
+    @Tool("swipe")
+    @LLMDescription(
+        " Simulates a continuous swipe (drag) gesture from the start coordinates to the end coordinates over the specified duration " +
+                "if startX and startY difference is lesser than endX and endY which means you are vertıcally scrolling otherwıse horizontal scrolling. " +
+                "You can use device_size to to make sure you are in bounds. Also you can use get_ui_dump to check are you in given scroll condition."
+    )
+    override suspend fun swipe(
+        startX: Int,
+        startY: Int,
+        endX: Int,
+        endY: Int,
+        durationMs: Long,
+        serial: String?
+    ): String = withContext(Dispatchers.IO) {
+        val device = getDevice(serial) ?: return@withContext "Device not found"
+        device.executeShellCommand("input swipe $startX $startY $endX $endY $durationMs", CollectingReceiver())
+        "Scroll"
     }
 
     private val keyEventMap = mapOf(
