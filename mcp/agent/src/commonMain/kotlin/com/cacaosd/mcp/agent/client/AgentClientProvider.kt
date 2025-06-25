@@ -6,14 +6,14 @@ import ai.koog.prompt.executor.llms.all.simpleOllamaAIExecutor
 import ai.koog.prompt.llm.OllamaModels
 
 fun provideGoogleAgentBuilder(apiKey: String): AgentClientBuilder {
-    return AgentClientBuilder(
+    return AgentClientBuilder.create(
         llmModel = GoogleModels.Gemini2_0Flash,
         executor = simpleGoogleAIExecutor(apiKey)
     )
 }
 
 fun provideMataLLama32AgentBuilder(): AgentClientBuilder {
-    return AgentClientBuilder(
+    return AgentClientBuilder.create(
         llmModel = OllamaModels.Meta.LLAMA_3_2,
         executor = simpleOllamaAIExecutor()
     )

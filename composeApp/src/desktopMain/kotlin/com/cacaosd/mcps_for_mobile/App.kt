@@ -2,6 +2,7 @@ package com.cacaosd.mcps_for_mobile
 
 import ChatScreenBranch
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.material.Surface
 import androidx.compose.runtime.Composable
 import com.cacaosd.godofai.feature.ChatViewModel
 import com.cacaosd.mcps_for_mobile.di.featureModule
@@ -17,7 +18,9 @@ fun App() {
 
     AppTheme {
         val chatViewModel = koinViewModel<ChatViewModel>()
-        ChatScreenBranch(chatViewModel)
+        Surface {
+            ChatScreenBranch(chatViewModel)
+        }
     }
 }
 

@@ -18,7 +18,8 @@ dump ui search result list and tap first element in result list which has title,
 AS a result tell me what you see on screen and tell me which tool did you use
  */
 fun main() = application {
-    val windowState = rememberWindowState(size = DpSize(width = 1020.dp, height = 1080.dp))
+    val windowState = rememberWindowState(size = DpSize(width = 1120.dp, height = 800.dp))
+
     Window(
         onCloseRequest = ::exitApplication,
         state = windowState,

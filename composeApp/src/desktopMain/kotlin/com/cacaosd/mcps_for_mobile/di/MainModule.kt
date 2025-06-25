@@ -84,14 +84,13 @@ private fun AIAgent.FeatureContext.installSimpleRegexTokenizer() {
 
 private fun AIAgent.FeatureContext.installEventHandler(agentEventFlow: MutableSharedFlow<AgentEvent>) {
     install(EventHandler) {
-        onToolCall { tool, toolArgs ->
-            agentEventFlow.emit(AgentEvent.ToolCall(tool.name, toolArgs.toString()))
-        }
-
-        onToolCallResult { tool, toolArgs, result ->
-            agentEventFlow.emit(AgentEvent.ToolResult(tool.name, result?.toStringDefault().orEmpty()))
-        }
-
+//        onToolCall { tool, toolArgs ->
+//            agentEventFlow.emit(AgentEvent.ToolCall(tool.name, toolArgs.toString()))
+//        }
+//
+//        onToolCallResult { tool, toolArgs, result ->
+//            agentEventFlow.emit(AgentEvent.ToolResult(tool.name, result?.toStringDefault().orEmpty()))
+//        }
 
         onAfterLLMCall { prompt, tools, model, responses, sessionUuid ->
             agentEventFlow.emit(AgentEvent.Prompt(prompt.messages))
@@ -105,7 +104,12 @@ private fun AIAgent.FeatureContext.installEventHandler(agentEventFlow: MutableSh
                         )
                     )
 
-                    is Message.Tool.Call -> agentEventFlow.emit(AgentEvent.ToolArgs(response.content))
+                    is Message.Tool.Call -> agentEventFlow.emit(
+                        AgentEvent.ToolMessage(
+                            toolName = response.tool,
+                            content = response.content
+                        )
+                    )
                 }
             }
         }

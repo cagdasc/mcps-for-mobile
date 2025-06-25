@@ -4,6 +4,7 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -33,11 +34,13 @@ object AppTheme {
         val extendedColorScheme = createExtendedColorScheme(colorScheme, isDarkTheme)
         val typography = AppTypography()
 
-        MaterialTheme(
-            colorScheme = colorScheme,
-            typography = typography,
-            content = content
-        )
+        CompositionLocalProvider(LocalAppSizes provides getSizes()) {
+            MaterialTheme(
+                colorScheme = colorScheme,
+                typography = typography,
+                content = content
+            )
+        }
     }
 }
 

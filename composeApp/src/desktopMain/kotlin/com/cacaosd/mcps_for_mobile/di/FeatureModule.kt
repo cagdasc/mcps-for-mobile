@@ -4,9 +4,9 @@ import com.cacaosd.godofai.feature.ChatViewModel
 import com.cacaosd.mcp.agent.client.AgentClientBuilder
 import com.cacaosd.mcp.agent.event.AgentEvent
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
-import org.koin.mp.KoinPlatform.getKoin
 
 val featureModule = module {
     viewModel {
@@ -17,9 +17,14 @@ val featureModule = module {
         """.trimIndent()
 
         val googleAgentBuilder: AgentClientBuilder = get(GoogleAgentQualifier)
-        val googleAgent = googleAgentBuilder.withSystemPrompt(systemPrompt).build()
+        val googleAgent = googleAgentBuilder
+            .withSystemPrompt(systemPrompt)
+            .addAssistantMessage("Please  describe  the  scenario  you  want to  automate  on  the  device.")
+            .build()
 
-        val agentEventFlow: MutableSharedFlow<AgentEvent> = get<MutableSharedFlow<AgentEvent>>(AgentMessageFlowQualifier)
+        val agentEventFlow: MutableSharedFlow<AgentEvent> =
+            get<MutableSharedFlow<AgentEvent>>(AgentMessageFlowQualifier)
 
-        ChatViewModel(agent = googleAgent,agentEventFlow=agentEventFlow) }
+        ChatViewModel(agent = googleAgent, agentEventFlow = agentEventFlow.asSharedFlow())
+    }
 }
