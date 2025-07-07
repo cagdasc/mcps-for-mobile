@@ -8,8 +8,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(project(":mcp:domain"))
-            implementation(libs.ai.koog)
+            implementation(libs.kotlinx.coroutines.core)
         }
     }
 }

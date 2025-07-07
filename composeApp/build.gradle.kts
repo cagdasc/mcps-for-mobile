@@ -18,6 +18,7 @@ kotlin {
             implementation(project(":ui:theme"))
             implementation(project(":mcp:adb"))
             implementation(project(":mcp:agent"))
+            implementation(project(":mcp:domain"))
 
             implementation(libs.ai.koog)
 

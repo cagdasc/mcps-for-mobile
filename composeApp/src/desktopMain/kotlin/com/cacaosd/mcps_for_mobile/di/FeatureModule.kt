@@ -1,30 +1,19 @@
 package com.cacaosd.mcps_for_mobile.di
 
 import com.cacaosd.godofai.feature.ChatViewModel
-import com.cacaosd.mcp.agent.client.AgentClientBuilder
-import com.cacaosd.mcp.agent.event.AgentEvent
+import com.cacaosd.mcp.domain.AgentClient
+import com.cacaosd.mcp.domain.McpMessage
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
 
 val featureModule = module {
     viewModel {
-        val systemPrompt =
-            """
-            You are a helpful AI assistant that can interact with android emulator. 
-            So you don't expect direction, you can give your own decision.
-        """.trimIndent()
+        val googleAgentClient: AgentClient = get(GoogleAgentQualifier)
 
-        val googleAgentBuilder: AgentClientBuilder = get(GoogleAgentQualifier)
-        val googleAgent = googleAgentBuilder
-            .withSystemPrompt(systemPrompt)
-            .addAssistantMessage("Please  describe  the  scenario  you  want to  automate  on  the  device.")
-            .build()
+        val mcpMessageFlow: MutableSharedFlow<McpMessage> =
+            get<MutableSharedFlow<McpMessage>>(McpMessageFlowQualifier)
 
-        val agentEventFlow: MutableSharedFlow<AgentEvent> =
-            get<MutableSharedFlow<AgentEvent>>(AgentMessageFlowQualifier)
-
-        ChatViewModel(agent = googleAgent, agentEventFlow = agentEventFlow.asSharedFlow())
+        ChatViewModel(agentClient = googleAgentClient, mcpMessageFlow = mcpMessageFlow)
     }
 }

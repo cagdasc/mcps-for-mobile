@@ -14,7 +14,7 @@ private fun findFileUpwards(name: String, start: File = File("").absoluteFile): 
     return null
 }
 
-val localProperties: Properties
+internal val localProperties: Properties
     get() {
         val properties = Properties()
         val localPropertiesFile = findFileUpwards("local.properties")

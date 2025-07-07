@@ -8,6 +8,28 @@ data class ChatScreenUiState(
 )
 
 /**
+ * Represents the sender of a message in a conversation.
+ *
+ * This sealed class defines the different types of senders that can be involved
+ * in a chat or conversation context, providing type safety and exhaustive handling.
+ */
+sealed class MessageOwner {
+    abstract val displayName: String
+
+    data object Assistant : MessageOwner() {
+        override val displayName: String = "Assistant"
+    }
+
+    data object User : MessageOwner() {
+        override val displayName: String = "User"
+    }
+
+    data class Tool(val toolName: String) : MessageOwner() {
+        override val displayName: String = "Tool - $toolName"
+    }
+}
+
+/**
  * Represents a message bubble in a conversation.
  *
  * This sealed interface defines the different types of messages that can appear
@@ -15,7 +37,7 @@ data class ChatScreenUiState(
  */
 sealed interface MessageBubble {
     val id: String
-    val sender: String?
+    val owner: MessageOwner
     val content: String
     val timestamp: Instant
     val metadata: Map<String, Any>
@@ -24,14 +46,14 @@ sealed interface MessageBubble {
      * Represents a request/input message from a user or system.
      *
      * @param id Unique identifier for the message.
-     * @param sender The sender of the request (null for anonymous).
+     * @param owner The sender of the request (null for anonymous).
      * @param content The actual message content.
      * @param timestamp When the message was created.
      * @param metadata Additional metadata associated with the message.
      */
     data class Request(
         override val id: String = UUID.randomUUID().toString(),
-        override val sender: String? = null,
+        override val owner: MessageOwner,
         override val content: String,
         override val timestamp: Instant = Instant.now(),
         override val metadata: Map<String, Any> = emptyMap()
@@ -45,7 +67,7 @@ sealed interface MessageBubble {
      * Represents a response/output message from an AI agent or system.
      *
      * @param id Unique identifier for the message.
-     * @param sender The sender of the response (null for anonymous).
+     * @param owner The sender of the response (null for anonymous).
      * @param content The actual message content.
      * @param timestamp When the message was created.
      * @param metadata Additional metadata associated with the message.
@@ -53,7 +75,7 @@ sealed interface MessageBubble {
      */
     data class Response(
         override val id: String = UUID.randomUUID().toString(),
-        override val sender: String? = null,
+        override val owner: MessageOwner,
         override val content: String,
         override val timestamp: Instant = Instant.now(),
         override val metadata: Map<String, Any> = emptyMap(),
@@ -68,15 +90,15 @@ sealed interface MessageBubble {
         /**
          * Creates a request message with the given content and optional sender.
          */
-        fun request(content: String, sender: String? = null): Request {
-            return Request(sender = sender, content = content)
+        fun request(content: String, sender: MessageOwner): Request {
+            return Request(owner = sender, content = content)
         }
 
         /**
          * Creates a response message with the given content and optional sender.
          */
-        fun response(content: String, sender: String? = null, requestId: String? = null): Response {
-            return Response(sender = sender, content = content, requestId = requestId)
+        fun response(content: String, sender: MessageOwner, requestId: String? = null): Response {
+            return Response(owner = sender, content = content, requestId = requestId)
         }
 
         /**
@@ -84,10 +106,10 @@ sealed interface MessageBubble {
          */
         fun requestWithMetadata(
             content: String,
-            sender: String? = null,
+            sender: MessageOwner,
             metadata: Map<String, Any>
         ): Request {
-            return Request(sender = sender, content = content, metadata = metadata)
+            return Request(owner = sender, content = content, metadata = metadata)
         }
 
         /**
@@ -95,12 +117,12 @@ sealed interface MessageBubble {
          */
         fun responseWithMetadata(
             content: String,
-            sender: String? = null,
+            sender: MessageOwner,
             requestId: String? = null,
             metadata: Map<String, Any>
         ): Response {
             return Response(
-                sender = sender,
+                owner = sender,
                 content = content,
                 requestId = requestId,
                 metadata = metadata
@@ -137,10 +159,9 @@ fun MessageBubble.asResponse(): MessageBubble.Response? = this as? MessageBubble
  * Returns a formatted string representation of the message.
  */
 fun MessageBubble.format(): String {
-    val senderPrefix = sender?.let { "[$it] " } ?: ""
     val typePrefix = when (this) {
         is MessageBubble.Request -> "REQUEST"
         is MessageBubble.Response -> "RESPONSE"
     }
-    return "$typePrefix: $senderPrefix$content"
+    return "$typePrefix: [$owner] $content"
 }

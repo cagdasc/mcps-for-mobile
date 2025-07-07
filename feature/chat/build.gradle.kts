@@ -13,6 +13,7 @@ kotlin {
 
         commonMain.dependencies {
             implementation(project(":mcp:agent"))
+            implementation(project(":mcp:domain"))
             implementation(project(":ui:theme"))
 
             implementation(compose.runtime)
@@ -24,8 +25,7 @@ kotlin {
             implementation(libs.androidx.lifecycle.runtime.compose)
 
             implementation(libs.kotlinx.coroutines.core)
-
-            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
+            implementation(libs.kotlinx.datetime)
 
             implementation("com.neoutils.highlight:highlight-compose:2.2.0")
 

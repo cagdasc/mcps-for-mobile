@@ -51,15 +51,12 @@ fun ChatScreen(
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
-                    // Display the list of messages
                     LazyColumn(
-                        modifier = Modifier
-                            .weight(1f)
-                            .fillMaxWidth(),
+                        modifier = Modifier.weight(1f).fillMaxWidth(),
                         reverseLayout = true,
                         contentPadding = PaddingValues(vertical = AppTheme.sizes.medium)
                     ) {
-                        items(chatScreenUiState.messages.asReversed()) { item ->
+                        items(chatScreenUiState.messages) { item ->
                             ChatBubble(item)
                         }
                     }
@@ -149,13 +146,11 @@ private fun ChatBubble(message: MessageBubble) {
                 .fillMaxWidth(.4f),
             verticalArrangement = Arrangement.spacedBy(AppTheme.sizes.small)
         ) {
-            message.sender?.let {
-                Text(
-                    text = it,
-                    style = MaterialTheme.typography.bodySmall.copy(fontStyle = FontStyle.Italic),
-                    color = MaterialTheme.colorScheme.onPrimary
-                )
-            }
+            Text(
+                text = message.owner.displayName,
+                style = MaterialTheme.typography.bodySmall.copy(fontStyle = FontStyle.Italic),
+                color = MaterialTheme.colorScheme.onPrimary
+            )
 
             Text(
                 text = message.content,

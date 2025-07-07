@@ -2,62 +2,54 @@
 
 package com.cacaosd.godofai.feature
 
-import ai.koog.agents.core.agent.AIAgent
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cacaosd.godofai.feature.MessageBubble.Companion.request
 import com.cacaosd.godofai.feature.MessageBubble.Companion.response
-import com.cacaosd.mcp.agent.event.AgentEvent
+import com.cacaosd.mcp.domain.AgentClient
+import com.cacaosd.mcp.domain.McpMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlin.time.ExperimentalTime
 
-class ChatViewModel(private val agent: AIAgent, agentEventFlow: SharedFlow<AgentEvent>) :
+class ChatViewModel(private val agentClient: AgentClient, private val mcpMessageFlow: MutableSharedFlow<McpMessage>) :
     ViewModel() {
     private val _chatScreenUiState = MutableStateFlow(ChatScreenUiState())
     val chatScreenUiState: StateFlow<ChatScreenUiState> = _chatScreenUiState
 
     init {
-        agentEventFlow
+        collectAgentEvent()
+    }
+
+    private fun collectAgentEvent() {
+        mcpMessageFlow
             .map { event ->
                 when (event) {
-                    is AgentEvent.AssistantMessage -> listOf(
-                        response(
-                            sender = "AI",
-                            content = event.content
-                        )
+                    is McpMessage.Request.User -> request(sender = MessageOwner.User, content = event.message)
+                    is McpMessage.Response.Assistant -> response(
+                        sender = MessageOwner.Assistant,
+                        content = event.content.trimIndent()
                     )
 
-                    is AgentEvent.Prompt -> {
-//                        event.messages.mapNotNull { message ->
-//                            when (message) {
-//                                is Message.System -> response(sender = "System", content = message.content)
-//                                is Message.User -> request(sender = "User", content = message.content)
-//                                is Message.Tool.Call -> null
-//                                is Message.Assistant -> null
-//                                is Message.Tool.Result -> null
-//                            }
-//                        }
-                        emptyList()
-                    }
-
-                    is AgentEvent.ToolMessage -> listOf(response(sender = "Tool - ${event.toolName}", content = event.content))
+                    is McpMessage.Request.Tool -> request(
+                        sender = MessageOwner.Tool(toolName = event.toolName),
+                        content = event.content
+                    )
                 }
             }
             .onEach {
                 _chatScreenUiState.update { state ->
-                    state.copy(messages = state.messages + it)
+                    state.copy(messages = listOf(it) + state.messages)
                 }
             }.launchIn(viewModelScope)
     }
 
     fun addUserMessage(content: String, image: String? = null) {
         viewModelScope.launch(Dispatchers.Default) {
-            _chatScreenUiState.update { state ->
-                state.copy(messages = state.messages + request(sender = "User", content = content))
+            mcpMessageFlow.emit(McpMessage.Request.User(message = content)).also {
+                agentClient.executePrompt(content)
             }
-            agent.run(content)
         }
     }
 }
