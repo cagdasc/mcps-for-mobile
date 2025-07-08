@@ -40,9 +40,8 @@ This demo shows the AI agent performing a sequence of natural language-driven ac
 > AS a result tell me what you see on screen and tell me which tool did you use
 > ```
 
-📹 [Watch the demo](https://github.com/user-attachments/assets/4e993976-7e87-495d-882f-29e086f7e3f0)
+📹 [Watch the demo](https://github.com/user-attachments/assets/c18f5b3a-5c11-48e9-981f-68bbb99ab3f8)
 
----
 
 ## 🚀 Getting Started
 
