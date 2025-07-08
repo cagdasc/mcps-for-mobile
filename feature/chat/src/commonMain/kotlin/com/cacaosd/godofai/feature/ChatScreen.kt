@@ -1,17 +1,14 @@
-@file:OptIn(ExperimentalEncodingApi::class)
+@file:OptIn(ExperimentalEncodingApi::class, ExperimentalFoundationApi::class)
 
 package com.cacaosd.godofai.feature
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.BasicTextField
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,18 +24,68 @@ fun ChatScreen(
     chatScreenUiState: ChatScreenUiState,
     onSendMessage: (String) -> Unit,
 ) {
-    // State to hold the current user input
     var currentMessage by remember { mutableStateOf(TextFieldValue("")) }
 
     Surface(color = MaterialTheme.colorScheme.background, contentColor = MaterialTheme.colorScheme.onBackground) {
         Row(
             modifier = Modifier.fillMaxWidth()
-                .padding(horizontal = AppTheme.sizes.large, vertical = AppTheme.sizes.medium)
+                .padding(horizontal = AppTheme.sizes.large, vertical = AppTheme.sizes.medium),
+            horizontalArrangement = Arrangement.spacedBy(AppTheme.sizes.medium)
         ) {
-            Column(modifier = Modifier.weight(.2f)) {
+            Column(
+                modifier = Modifier.weight(.4f),
+                verticalArrangement = Arrangement.spacedBy(AppTheme.sizes.medium)
+            ) {
+                TextField(
+                    value = currentMessage,
+                    onValueChange = {
+                        currentMessage = it
+                    },
+                    label = { Text(text = "Scenario", style = MaterialTheme.typography.labelLarge) },
+                    modifier = Modifier.fillMaxWidth().weight(1f),
+                    textStyle = MaterialTheme.typography.bodyLarge,
+                    shape = MaterialTheme.shapes.small,
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        focusedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                )
 
+                Button(
+                    modifier = Modifier.fillMaxWidth(),
+                    onClick = {
+                        val input = currentMessage.text.trim()
+                        if (input.isNotEmpty()) {
+                            onSendMessage(input)  // Trigger the send message callback
+                            currentMessage = TextFieldValue("")  // Clear the input field
+                        }
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        contentColor = MaterialTheme.colorScheme.onPrimary,
+                        containerColor = MaterialTheme.colorScheme.primary,
+                    ),
+                    enabled = chatScreenUiState.executionState is ExecutionState.Idle
+                ) {
+                    Text(
+                        "Run Scenario",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+
+                    if (chatScreenUiState.executionState is ExecutionState.Executing) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.padding(start = AppTheme.sizes.medium).size(AppTheme.sizes.xlarge),
+                            color = MaterialTheme.colorScheme.onPrimary,
+                            strokeWidth = 3.dp
+                        )
+                    }
+                }
             }
-
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = "Device name here", style = MaterialTheme.typography.headlineLarge)
                 Spacer(modifier = Modifier.height(AppTheme.sizes.xxlarge))
@@ -47,7 +94,6 @@ fun ChatScreen(
                     DeviceSpecBox(modifier = Modifier.weight(1f), spec = "Resolution", value = "1080x2400")
                     DeviceSpecBox(modifier = Modifier.weight(1f), spec = "Android", value = "13")
                 }
-
                 Column(
                     modifier = Modifier.fillMaxSize()
                 ) {
@@ -60,46 +106,10 @@ fun ChatScreen(
                             ChatBubble(item)
                         }
                     }
-
-                    // Input field and send button
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        // Input text field
-                        BasicTextField(
-                            value = currentMessage,
-                            onValueChange = { currentMessage = it },
-                            modifier = Modifier
-                                .weight(1f)
-                                .background(MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.small)
-                                .padding(AppTheme.sizes.medium),
-                            maxLines = 6
-                        )
-
-                        Spacer(modifier = Modifier.width(8.dp))
-
-                        // Send button
-                        Button(
-                            onClick = {
-                                val input = currentMessage.text.trim()
-                                if (input.isNotEmpty()) {
-                                    onSendMessage(input)  // Trigger the send message callback
-                                    currentMessage = TextFieldValue("")  // Clear the input field
-                                }
-                            },
-                        ) {
-                            Text("Send", color = Color.White)
-                        }
-                    }
                 }
             }
         }
     }
-
 }
 
 @Composable
@@ -125,10 +135,10 @@ private fun DeviceSpecBox(modifier: Modifier = Modifier, spec: String, value: St
 
 @Composable
 private fun ChatBubble(message: MessageBubble) {
-    // Styling the bubbles based on role
-    val backgroundColor = when {
-        message.isRequest() -> MaterialTheme.colorScheme.primary
-        else -> MaterialTheme.colorScheme.secondary
+    val (backgroundColor, contentColor) = when (message.owner) {
+        MessageOwner.User -> MaterialTheme.colorScheme.primary to MaterialTheme.colorScheme.onPrimary
+        MessageOwner.Assistant -> MaterialTheme.colorScheme.secondary to MaterialTheme.colorScheme.onSecondary
+        is MessageOwner.Tool -> MaterialTheme.colorScheme.tertiary to MaterialTheme.colorScheme.onTertiary
     }
 
     val alignment = when {

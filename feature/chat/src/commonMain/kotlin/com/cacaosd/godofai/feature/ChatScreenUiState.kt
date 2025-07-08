@@ -5,7 +5,15 @@ import java.util.*
 
 data class ChatScreenUiState(
     val messages: List<MessageBubble> = emptyList(),
+    val executionState: ExecutionState = ExecutionState.Idle,
 )
+
+sealed class ExecutionState {
+    data object Idle : ExecutionState()
+    data object Executing : ExecutionState()
+    data class Success(val message: String? = null) : ExecutionState()
+    data class Error(val error: Throwable) : ExecutionState()
+}
 
 /**
  * Represents the sender of a message in a conversation.

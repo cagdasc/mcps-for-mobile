@@ -40,13 +40,23 @@ class ChatViewModel(private val agentClient: AgentClient, private val mcpMessage
             }
             .onEach {
                 _chatScreenUiState.update { state ->
-                    state.copy(messages = listOf(it) + state.messages)
+                    state.copy(
+                        messages = listOf(it) + state.messages,
+                        executionState = if (it.owner is MessageOwner.Assistant) {
+                            ExecutionState.Success()
+                        } else {
+                            ExecutionState.Executing
+                        }
+                    )
                 }
             }.launchIn(viewModelScope)
     }
 
     fun addUserMessage(content: String, image: String? = null) {
         viewModelScope.launch(Dispatchers.Default) {
+            _chatScreenUiState.update { state ->
+                state.copy(executionState = ExecutionState.Executing)
+            }
             mcpMessageFlow.emit(McpMessage.Request.User(message = content)).also {
                 agentClient.executePrompt(content)
             }

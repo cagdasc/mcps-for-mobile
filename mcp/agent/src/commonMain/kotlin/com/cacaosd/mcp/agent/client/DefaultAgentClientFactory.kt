@@ -27,7 +27,7 @@ class DefaultAgentClientFactory(
     override fun createGoogleAgent(apiKey: String): AgentClient {
         val builder = provideGoogleAgentBuilder(apiKey)
             .withSystemPrompt(systemPrompt)
-            .withMaxIterations(10)
+            .withMaxIterations(50)
             .withTools(toolRegistry)
             .withStrategy(aiAgentStrategy)
             .withFeatures {
