@@ -67,6 +67,16 @@ class DefaultAgentClientFactory(
                     mcpMessageFlow.emit(mcpMessage)
                 }
             }
+
+            onAgentRunError { strategyName, sessionUuid, throwable ->
+                mcpMessageFlow.emit(
+                    McpMessage.Response.AssistantWithError(
+                        strategyName = strategyName,
+                        throwable = throwable
+                    )
+                )
+            }
+
             onToolCallResult { tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult? ->
                 // TODO: Handle tool call result if needed
             }

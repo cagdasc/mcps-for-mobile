@@ -4,6 +4,7 @@ import java.time.Instant
 import java.util.*
 
 data class ChatScreenUiState(
+    val prompt: String = "",
     val messages: List<MessageBubble> = emptyList(),
     val executionState: ExecutionState = ExecutionState.Idle,
 )
@@ -87,7 +88,8 @@ sealed interface MessageBubble {
         override val content: String,
         override val timestamp: Instant = Instant.now(),
         override val metadata: Map<String, Any> = emptyMap(),
-        val requestId: String? = null
+        val requestId: String? = null,
+        val throwable: Throwable? = null
     ) : MessageBubble {
         init {
             require(content.isNotBlank()) { "Response content cannot be blank" }
@@ -105,8 +107,13 @@ sealed interface MessageBubble {
         /**
          * Creates a response message with the given content and optional sender.
          */
-        fun response(content: String, sender: MessageOwner, requestId: String? = null): Response {
-            return Response(owner = sender, content = content, requestId = requestId)
+        fun response(
+            content: String,
+            sender: MessageOwner,
+            requestId: String? = null,
+            throwable: Throwable? = null
+        ): Response {
+            return Response(owner = sender, content = content, requestId = requestId, throwable = throwable)
         }
 
         /**

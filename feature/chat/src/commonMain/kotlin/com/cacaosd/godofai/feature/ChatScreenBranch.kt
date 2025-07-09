@@ -11,8 +11,11 @@ fun ChatScreenBranch(chatViewModel: ChatViewModel) {
 
     ChatScreen(
         chatScreenUiState = chatScreenUiState,
-        onSendMessage = { userMessage ->
-            chatViewModel.addUserMessage(userMessage)
+        onRunScenarioClicked = {
+            chatViewModel.addUserMessage()
+        },
+        onTextChanged = {
+            chatViewModel.updatePrompt(it)
         }
     )
 }

@@ -8,13 +8,14 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import com.cacaosd.ui_theme.AppTheme
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -22,91 +23,114 @@ import kotlin.io.encoding.ExperimentalEncodingApi
 @Composable
 fun ChatScreen(
     chatScreenUiState: ChatScreenUiState,
-    onSendMessage: (String) -> Unit,
+    onRunScenarioClicked: () -> Unit,
+    onTextChanged: (String) -> Unit,
 ) {
-    var currentMessage by remember { mutableStateOf(TextFieldValue("")) }
-
     Surface(color = MaterialTheme.colorScheme.background, contentColor = MaterialTheme.colorScheme.onBackground) {
         Row(
             modifier = Modifier.fillMaxWidth()
                 .padding(horizontal = AppTheme.sizes.large, vertical = AppTheme.sizes.medium),
             horizontalArrangement = Arrangement.spacedBy(AppTheme.sizes.medium)
         ) {
-            Column(
-                modifier = Modifier.weight(.4f),
-                verticalArrangement = Arrangement.spacedBy(AppTheme.sizes.medium)
+            ScenarioInputContainer(chatScreenUiState, onTextChanged, onRunScenarioClicked)
+            ChatContainer(chatScreenUiState)
+        }
+    }
+}
+
+@Composable
+private fun RowScope.ChatContainer(chatScreenUiState: ChatScreenUiState) {
+    Column(modifier = Modifier.weight(1f)) {
+        Text(text = "Device name here", style = MaterialTheme.typography.headlineLarge)
+        Spacer(modifier = Modifier.height(AppTheme.sizes.xxlarge))
+        Row(horizontalArrangement = Arrangement.spacedBy(AppTheme.sizes.medium)) {
+            DeviceSpecBox(modifier = Modifier.weight(1f), spec = "Battery", value = "85%")
+            DeviceSpecBox(modifier = Modifier.weight(1f), spec = "Resolution", value = "1080x2400")
+            DeviceSpecBox(modifier = Modifier.weight(1f), spec = "Android", value = "13")
+        }
+        Column(modifier = Modifier.fillMaxSize().padding(top = AppTheme.sizes.medium)) {
+            LazyColumn(
+                modifier = Modifier.weight(1f).fillMaxWidth(),
+                reverseLayout = true,
+                contentPadding = PaddingValues(vertical = AppTheme.sizes.medium)
             ) {
-                TextField(
-                    value = currentMessage,
-                    onValueChange = {
-                        currentMessage = it
-                    },
-                    label = { Text(text = "Scenario", style = MaterialTheme.typography.labelLarge) },
-                    modifier = Modifier.fillMaxWidth().weight(1f),
-                    textStyle = MaterialTheme.typography.bodyLarge,
-                    shape = MaterialTheme.shapes.small,
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                        unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
-                        focusedIndicatorColor = Color.Transparent,
-                        unfocusedIndicatorColor = Color.Transparent,
-                        focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        unfocusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        focusedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
-                        unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    ),
-                )
-
-                Button(
-                    modifier = Modifier.fillMaxWidth(),
-                    onClick = {
-                        val input = currentMessage.text.trim()
-                        if (input.isNotEmpty()) {
-                            onSendMessage(input)  // Trigger the send message callback
-                            currentMessage = TextFieldValue("")  // Clear the input field
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(
-                        contentColor = MaterialTheme.colorScheme.onPrimary,
-                        containerColor = MaterialTheme.colorScheme.primary,
-                    ),
-                    enabled = chatScreenUiState.executionState is ExecutionState.Idle
-                ) {
-                    Text(
-                        "Run Scenario",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
-
-                    if (chatScreenUiState.executionState is ExecutionState.Executing) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.padding(start = AppTheme.sizes.medium).size(AppTheme.sizes.xlarge),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 3.dp
-                        )
-                    }
+                items(chatScreenUiState.messages) { item ->
+                    ChatBubble(item)
                 }
             }
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = "Device name here", style = MaterialTheme.typography.headlineLarge)
-                Spacer(modifier = Modifier.height(AppTheme.sizes.xxlarge))
-                Row(horizontalArrangement = Arrangement.spacedBy(AppTheme.sizes.medium)) {
-                    DeviceSpecBox(modifier = Modifier.weight(1f), spec = "Battery", value = "85%")
-                    DeviceSpecBox(modifier = Modifier.weight(1f), spec = "Resolution", value = "1080x2400")
-                    DeviceSpecBox(modifier = Modifier.weight(1f), spec = "Android", value = "13")
+        }
+    }
+}
+
+@Composable
+private fun RowScope.ScenarioInputContainer(
+    chatScreenUiState: ChatScreenUiState,
+    onTextChanged: (String) -> Unit,
+    onRunScenarioClicked: () -> Unit
+) {
+    Column(
+        modifier = Modifier.weight(.4f),
+        verticalArrangement = Arrangement.spacedBy(AppTheme.sizes.medium)
+    ) {
+        TextField(
+            value = chatScreenUiState.prompt,
+            onValueChange = {
+                onTextChanged(it)
+            },
+            label = { Text(text = "Scenario", style = MaterialTheme.typography.labelLarge) },
+            modifier = Modifier.fillMaxWidth().weight(1f),
+            textStyle = MaterialTheme.typography.bodyLarge,
+            shape = MaterialTheme.shapes.small,
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceVariant,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                focusedTextColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                focusedLabelColor = MaterialTheme.colorScheme.onTertiaryContainer,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+            ),
+            enabled = chatScreenUiState.executionState !is ExecutionState.Executing
+        )
+
+        Button(
+            modifier = Modifier.fillMaxWidth(),
+            onClick = {
+                if (chatScreenUiState.prompt.isNotEmpty()) {
+                    onRunScenarioClicked()
                 }
-                Column(
-                    modifier = Modifier.fillMaxSize()
-                ) {
-                    LazyColumn(
-                        modifier = Modifier.weight(1f).fillMaxWidth(),
-                        reverseLayout = true,
-                        contentPadding = PaddingValues(vertical = AppTheme.sizes.medium)
-                    ) {
-                        items(chatScreenUiState.messages) { item ->
-                            ChatBubble(item)
-                        }
-                    }
+            },
+            colors = ButtonDefaults.buttonColors(
+                contentColor = MaterialTheme.colorScheme.onPrimary,
+                containerColor = MaterialTheme.colorScheme.primary,
+            ),
+            enabled = chatScreenUiState.prompt.isNotEmpty() && chatScreenUiState.executionState !is ExecutionState.Executing
+        ) {
+            Text(
+                "Run Scenario",
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            when (chatScreenUiState.executionState) {
+                is ExecutionState.Executing -> {
+                    CircularProgressIndicator(
+                        modifier = Modifier.padding(start = AppTheme.sizes.medium).size(AppTheme.sizes.xlarge),
+                        color = MaterialTheme.colorScheme.onPrimary,
+                        strokeWidth = 3.dp
+                    )
                 }
+
+                is ExecutionState.Error -> {
+                    Icon(
+                        imageVector = Icons.Filled.Warning,
+                        contentDescription = null,
+                        modifier = Modifier.padding(start = AppTheme.sizes.medium).size(AppTheme.sizes.xlarge),
+                        tint = MaterialTheme.colorScheme.onPrimary
+                    )
+                }
+
+                else -> {}
             }
         }
     }
@@ -159,13 +183,13 @@ private fun ChatBubble(message: MessageBubble) {
             Text(
                 text = message.owner.displayName,
                 style = MaterialTheme.typography.bodySmall.copy(fontStyle = FontStyle.Italic),
-                color = MaterialTheme.colorScheme.onPrimary
+                color = contentColor
             )
 
             Text(
                 text = message.content,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onPrimary
+                color = contentColor
             )
         }
     }
