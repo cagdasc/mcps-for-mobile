@@ -24,7 +24,7 @@ class AndroidDeviceController(
 ) : DeviceController {
 
     override suspend fun listConnectedDevices(): List<String> = withContext(Dispatchers.IO) {
-        adb.devices.map { it.serialNumber }
+        adb.devices.map { "Name: ${it.name}, Serial: ${it.serialNumber}" }
     }
 
     override suspend fun listInstalledPackages(serial: String?): List<String> = withContext(Dispatchers.IO) {
@@ -49,11 +49,11 @@ class AndroidDeviceController(
         val xmlName = "uidump_$timestamp.xml"
         val remotePath = "/sdcard/$xmlName"
 
-        val dumpReceiver = CollectingReceiver()
-        device.executeShellCommand("uiautomator dump $remotePath", dumpReceiver)
+        device.executeShellCommand("uiautomator dump $remotePath", CollectingReceiver())
 
         val localDumpFile = appConfigManager.getUiDumpFile(filename = xmlName).toFile()
         device.pullFile(remotePath, localDumpFile.absolutePath)
+        device.executeShellCommand("rm $remotePath", CollectingReceiver())
 
         // TODO: Return structured format
         layoutOptimiser.optimise(localDumpFile).toString()
@@ -138,7 +138,12 @@ class AndroidDeviceController(
 
     private fun getDevice(serial: String?): IDevice? {
         val devices = adb.devices
-        return if (serial == null && devices.isNotEmpty()) devices.first()
-        else devices.find { it.serialNumber == serial }
+        return when {
+            serial == null && devices.size > 1 ->
+                error("Multiple devices connected. Please specify a serial number.")
+
+            serial == null -> devices.firstOrNull()
+            else -> devices.find { it.serialNumber == serial }
+        }
     }
 }
