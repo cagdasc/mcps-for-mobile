@@ -8,9 +8,10 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            implementation(libs.ai.koog)
             implementation(libs.xmlutil.core)
             implementation(libs.xmlutil.serialization)
+            implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.kotlinx.datetime)
         }
 
         val desktopMain by getting {

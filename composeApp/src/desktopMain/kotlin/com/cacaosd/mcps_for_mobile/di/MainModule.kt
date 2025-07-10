@@ -23,6 +23,11 @@ internal object McpMessageFlowQualifier : Qualifier {
         get() = TypeQualifier(McpMessageFlowQualifier::class).value
 }
 
+internal object AndroidDeviceControllerQualifier : Qualifier {
+    override val value: QualifierValue
+        get() = TypeQualifier(AndroidDeviceControllerQualifier::class).value
+}
+
 val mainModule = module {
     includes(utilityModule, toolsModule, agentModule)
 }

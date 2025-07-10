@@ -18,6 +18,20 @@ class AppConfigManager(
 ) {
     private val logger = Logger.getLogger(AppConfigManager::class.java.name)
 
+    fun initializeApp() {
+        // Initialize configuration
+        if (initialize()) {
+            println("✅ Configuration initialized successfully")
+
+            // Check if first run
+            if (isFirstRun()) {
+                println("👋 Welcome! This is your first time running the app.")
+                // Perform first-run setup
+                markFirstRunCompleted()
+            }
+        }
+    }
+
     // Platform-specific base directories
     private val baseConfigDir: Path = when (getOperatingSystem()) {
         OS.WINDOWS -> Paths.get(System.getenv("APPDATA") ?: System.getProperty("user.home"), appName)
@@ -43,12 +57,11 @@ class AppConfigManager(
     // Configuration files
     val mainConfigFile: Path = configDir.resolve("config.properties")
     val userPrefsFile: Path = configDir.resolve("user-preferences.json")
-    val appStateFile: Path = uiDumpDir.resolve("app-state.json")
 
     /**
      * Initialize all application directories and create default configuration files
      */
-    fun initialize(): Boolean {
+    private fun initialize(): Boolean {
         return try {
             createDirectoryStructure()
             createDefaultConfigFiles()
@@ -166,7 +179,7 @@ class AppConfigManager(
     /**
      * Check if this is the first run of the application
      */
-    fun isFirstRun(): Boolean {
+    private fun isFirstRun(): Boolean {
         return try {
             if (!Files.exists(mainConfigFile)) return true
 
@@ -184,7 +197,7 @@ class AppConfigManager(
     /**
      * Mark first run as completed
      */
-    fun markFirstRunCompleted() {
+    private fun markFirstRunCompleted() {
         try {
             val properties = java.util.Properties()
             if (Files.exists(mainConfigFile)) {
