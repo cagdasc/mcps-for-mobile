@@ -4,7 +4,7 @@ import com.cacaosd.mcp.adb.AppConfigManager
 
 interface DeviceController {
 
-    suspend fun listConnectedDevices(): List<String>
+    suspend fun getDevices(): List<DeviceInfo>
 
     suspend fun listInstalledPackages(serial: String?): List<String>
 

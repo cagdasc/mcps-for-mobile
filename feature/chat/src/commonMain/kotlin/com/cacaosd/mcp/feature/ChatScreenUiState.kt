@@ -1,12 +1,22 @@
-package com.cacaosd.godofai.feature
+package com.cacaosd.mcp.feature
 
 import java.time.Instant
 import java.util.*
 
 data class ChatScreenUiState(
+    val deviceDataList: List<DeviceData> = emptyList(),
+    val selectedDevice: DeviceData? = null,
     val prompt: String = "",
     val messages: List<MessageBubble> = emptyList(),
     val executionState: ExecutionState = ExecutionState.Idle,
+)
+
+data class DeviceData(
+    val name: String,
+    val serial: String,
+    val batteryLevel: Int = 0,
+    val screenSize: String? = null,
+    val osVersion: String = "",
 )
 
 sealed class ExecutionState {

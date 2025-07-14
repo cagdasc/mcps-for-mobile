@@ -16,7 +16,9 @@ class DeviceControllerTools(private val deviceController: DeviceController) : To
         "Retrieves the serial numbers of all Android devices and emulators currently connected " +
                 "to the local development machine via ADB"
     )
-    suspend fun listConnectedDevices(): List<String> = deviceController.listConnectedDevices()
+    suspend fun listConnectedDevices(): List<String> {
+        return deviceController.getDevices().map { "Device name: ${it.name}, serial: ${it.serial}" }
+    }
 
     @Tool("list_installed_packages")
     @LLMDescription("Retrieves all package names of applications installed on the specified device (defaults to the first connected device if omitted).")

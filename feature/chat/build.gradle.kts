@@ -12,6 +12,7 @@ kotlin {
         val desktopMain by getting
 
         commonMain.dependencies {
+            implementation(project(":mcp:adb"))
             implementation(project(":mcp:agent"))
             implementation(project(":mcp:domain"))
             implementation(project(":ui:theme"))
@@ -19,6 +20,7 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)

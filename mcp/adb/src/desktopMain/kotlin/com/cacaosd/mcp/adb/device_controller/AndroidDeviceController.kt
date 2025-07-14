@@ -1,12 +1,16 @@
 package com.cacaosd.mcp.adb.device_controller
 
 import com.android.ddmlib.AndroidDebugBridge
+import com.android.ddmlib.CollectingOutputReceiver
 import com.android.ddmlib.IDevice
 import com.cacaosd.mcp.adb.AppConfigManager
 import com.cacaosd.mcp.adb.layout_optimizer.LayoutOptimiser
 import com.cacaosd.mcp.adb.layout_optimizer.getLayoutOptimiser
+import com.cacaosd.mcp.shared.extension.asFlow
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 
@@ -23,8 +27,18 @@ class AndroidDeviceController(
     private val appConfigManager: AppConfigManager
 ) : DeviceController {
 
-    override suspend fun listConnectedDevices(): List<String> = withContext(Dispatchers.IO) {
-        adb.devices.map { "Name: ${it.name}, Serial: ${it.serialNumber}" }
+    override suspend fun getDevices(): List<DeviceInfo> {
+        return adb.devices.map { device ->
+            val batteryLevel = device.battery.asFlow().catch { emit(-1) }.firstOrNull() ?: -1
+
+            DeviceInfo(
+                name = device.name,
+                serial = device.serialNumber,
+                batteryLevel = batteryLevel,
+                osVersion = device.version.apiStringWithExtension,
+                dimensions = getDimensions(device.serialNumber)
+            )
+        }
     }
 
     override suspend fun listInstalledPackages(serial: String?): List<String> = withContext(Dispatchers.IO) {
@@ -32,6 +46,29 @@ class AndroidDeviceController(
         val shellOutputReceiver = CollectingReceiver()
         device.executeShellCommand("pm list packages", shellOutputReceiver)
         shellOutputReceiver.resultLines.map { it.removePrefix("package:") }
+    }
+
+    fun getInstalledPackages(serial: String?): List<String> {
+        val device = getDevice(serial) ?: return emptyList()
+
+        val receiver = CollectingOutputReceiver()
+        device.executeShellCommand("pm list packages", receiver)
+        val output = receiver.output
+        return output
+            .split("\n")
+            .filter { it.startsWith("package:") }
+            .map { it.removePrefix("package:").trim() }
+    }
+
+    fun getAppLabel(serial: String?, packageName: String): String? {
+        val device = getDevice(serial) ?: return null
+        val receiver = CollectingOutputReceiver()
+        device.executeShellCommand("dumpsys package $packageName", receiver)
+        val output = receiver.output
+
+        // This will try to find the app label (name) in the dumpsys output
+        val labelLine = output.lines().find { it.contains("application-label:") }
+        return labelLine?.substringAfter("application-label:")?.trim()
     }
 
     override suspend fun launchApp(packageName: String, serial: String?): String = withContext(Dispatchers.IO) {
@@ -84,6 +121,13 @@ class AndroidDeviceController(
         val receiver = CollectingReceiver()
         device.executeShellCommand("wm size", receiver)
         receiver.result
+    }
+
+    private suspend fun getDimensions(serial: String?): String? {
+        val deviceSize = deviceSize(serial)
+        val regex = Regex("""\b(\d+x\d+)\b""")
+        val match = regex.find(deviceSize)
+        return match?.groups?.get(1)?.value
     }
 
     override suspend fun screenshot(serial: String?): String = withContext(Dispatchers.IO) {

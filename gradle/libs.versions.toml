@@ -13,6 +13,7 @@ logback-version = "1.4.14"
 koog-version = "0.2.1"
 xmlutil-version = "0.91.1"
 android-ddms-version = "31.10.1"
+adblib-version = "8.11.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -49,6 +50,8 @@ ai-koog = { module = "ai.koog:koog-agents", version.ref = "koog-version" }
 
 # Tools
 android-tools-ddms = { module = "com.android.tools.ddms:ddmlib", version.ref = "android-ddms-version" }
+android-tools-adblib = { module = "com.android.tools.adblib:adblib", version.ref = "adblib-version" }
+android-tools-adblib-tools = { module = "com.android.tools.adblib:adblib", version.ref = "adblib-version" }
 
 [plugins]
 composeHotReload = { id = "org.jetbrains.compose.hot-reload", version.ref = "composeHotReload" }
