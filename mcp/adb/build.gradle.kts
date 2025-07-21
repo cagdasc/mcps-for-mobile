@@ -24,10 +24,9 @@ kotlin {
             dependencies {
                 implementation(libs.android.tools.ddms)
                 implementation(libs.android.tools.adblib)
-                implementation(libs.android.tools.adblib.tools)
-                implementation("com.android.tools:sdklib:31.11.1")
-                implementation("com.android.tools:common:31.11.1")
-                implementation("com.android.tools:sdk-common:31.11.1")
+                implementation(libs.android.tools.sdklib)
+                implementation(libs.android.tools.common)
+                implementation(libs.android.tools.sdk.common)
             }
         }
 

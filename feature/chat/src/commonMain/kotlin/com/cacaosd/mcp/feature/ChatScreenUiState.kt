@@ -5,7 +5,10 @@ import java.util.*
 
 data class ChatScreenUiState(
     val deviceDataList: List<DeviceData> = emptyList(),
+    val installedApps: List<InstalledApp> = emptyList(),
     val selectedDevice: DeviceData? = null,
+    val selectedApp: InstalledApp? = null,
+    val chipItems: Set<ChipItem> = emptySet(),
     val prompt: String = "",
     val messages: List<MessageBubble> = emptyList(),
     val executionState: ExecutionState = ExecutionState.Idle,
@@ -17,7 +20,21 @@ data class DeviceData(
     val batteryLevel: Int = 0,
     val screenSize: String? = null,
     val osVersion: String = "",
-)
+) : ChipItem {
+    override val label: String
+        get() = name
+}
+
+data class InstalledApp(
+    val packageName: String,
+) : ChipItem {
+    override val label: String
+        get() = packageName
+}
+
+interface ChipItem {
+    val label: String
+}
 
 sealed class ExecutionState {
     data object Idle : ExecutionState()

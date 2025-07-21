@@ -14,13 +14,15 @@ import androidx.compose.material.icons.filled.BatteryFull
 import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.dp
+import com.cacaosd.mcp.feature.composable.ChipFlowRow
+import com.cacaosd.mcp.feature.composable.GenericDropdown
 import com.cacaosd.ui_theme.AppTheme
 import kotlin.io.encoding.ExperimentalEncodingApi
 
@@ -43,7 +45,7 @@ fun ChatScreen(
 
 @Composable
 private fun RowScope.ChatContainer(chatScreenUiState: ChatScreenUiState, onAction: (ChatScreenAction) -> Unit) {
-    Column(modifier = Modifier.weight(1f)) {
+    Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(AppTheme.sizes.medium)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,
@@ -51,12 +53,15 @@ private fun RowScope.ChatContainer(chatScreenUiState: ChatScreenUiState, onActio
                 AppTheme.sizes.medium
             )
         ) {
-            DeviceDropdown(
-                deviceNames = chatScreenUiState.deviceDataList,
-                selectedDevice = chatScreenUiState.selectedDevice,
-                onDeviceSelected = { deviceName ->
-                    onAction(ChatScreenAction.DeviceSelected(deviceName))
-                }
+            GenericDropdown(
+                items = chatScreenUiState.deviceDataList,
+                selectedItem = chatScreenUiState.selectedDevice,
+                onItemSelected = { device ->
+                    onAction(ChatScreenAction.DeviceSelected(device))
+                },
+                label = "Device",
+                placeholder = "Select device",
+                itemText = { it.name },
             )
 
             if (chatScreenUiState.selectedDevice != null) {
@@ -82,7 +87,20 @@ private fun RowScope.ChatContainer(chatScreenUiState: ChatScreenUiState, onActio
             }
         }
 
-        Column(modifier = Modifier.fillMaxSize().padding(top = AppTheme.sizes.medium)) {
+        if (chatScreenUiState.installedApps.isNotEmpty()) {
+            GenericDropdown(
+                items = chatScreenUiState.installedApps,
+                selectedItem = chatScreenUiState.selectedApp,
+                onItemSelected = { app ->
+                    onAction(ChatScreenAction.AppSelected(app))
+                },
+                label = "App",
+                placeholder = "Select an app",
+                itemText = { it.packageName },
+            )
+        }
+
+        Column(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 reverseLayout = true,
@@ -110,7 +128,20 @@ private fun RowScope.ScenarioInputContainer(
             onValueChange = {
                 onAction(ChatScreenAction.PromptChanged(it))
             },
-            label = { Text(text = "Scenario", style = MaterialTheme.typography.labelLarge) },
+            label = {
+                Column(verticalArrangement = Arrangement.spacedBy(AppTheme.sizes.small)) {
+                    Text(text = "Scenario", style = MaterialTheme.typography.labelLarge)
+                    if (chatScreenUiState.chipItems.isNotEmpty()) {
+                        ChipFlowRow(
+                            items = chatScreenUiState.chipItems.toList(),
+                            onItemToggle = { item ->
+                                onAction(ChatScreenAction.RemoveChip(item))
+                            },
+                            chipText = { it.label },
+                        )
+                    }
+                }
+            },
             modifier = Modifier.fillMaxWidth().weight(1f),
             textStyle = MaterialTheme.typography.bodyLarge,
             shape = MaterialTheme.shapes.small,
@@ -235,47 +266,6 @@ private fun ChatBubble(message: MessageBubble) {
                 style = MaterialTheme.typography.bodyLarge,
                 color = contentColor
             )
-        }
-    }
-}
-
-@Composable
-fun DeviceDropdown(
-    modifier: Modifier = Modifier,
-    deviceNames: List<DeviceData>,
-    selectedDevice: DeviceData?,
-    onDeviceSelected: (DeviceData) -> Unit
-) {
-    var expanded by remember { mutableStateOf(false) }
-    Box(modifier = modifier) {
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
-        ) {
-            TextField(
-                value = selectedDevice?.name ?: "Select device",
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("Device") },
-                trailingIcon = {
-                    ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                },
-                modifier = Modifier.menuAnchor(MenuAnchorType.PrimaryNotEditable, enabled = true)
-            )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false }
-            ) {
-                deviceNames.forEach { device ->
-                    DropdownMenuItem(
-                        text = { Text(device.name) },
-                        onClick = {
-                            onDeviceSelected(device)
-                            expanded = false
-                        }
-                    )
-                }
-            }
         }
     }
 }

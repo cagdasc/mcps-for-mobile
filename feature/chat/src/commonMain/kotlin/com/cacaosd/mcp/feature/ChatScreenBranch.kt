@@ -1,9 +1,7 @@
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import com.cacaosd.mcp.feature.ChatScreen
-import com.cacaosd.mcp.feature.ChatViewModel
-import com.cacaosd.mcp.feature.DeviceData
+import com.cacaosd.mcp.feature.*
 
 @Composable
 fun ChatScreenBranch(chatViewModel: ChatViewModel) {
@@ -18,6 +16,8 @@ fun ChatScreenBranch(chatViewModel: ChatViewModel) {
 
 sealed interface ChatScreenAction {
     data class DeviceSelected(val deviceData: DeviceData) : ChatScreenAction
+    data class AppSelected(val installedApp: InstalledApp) : ChatScreenAction
     data class PromptChanged(val prompt: String) : ChatScreenAction
+    data class RemoveChip(val chipItem: ChipItem) : ChatScreenAction
     object RunScenarioClicked : ChatScreenAction
 }

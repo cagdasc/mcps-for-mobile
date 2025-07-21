@@ -8,27 +8,57 @@ import androidx.lifecycle.viewModelScope
 import com.cacaosd.mcp.adb.device_controller.DeviceController
 import com.cacaosd.mcp.domain.AgentClient
 import com.cacaosd.mcp.domain.McpMessage
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ObsoleteCoroutinesApi
+import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlin.time.ExperimentalTime
+
+private const val DEVICE_POLL_INTERVAL = 5000L
+private const val INSTALLED_PACKAGES_POLL_INTERVAL = 20_000L
 
 class ChatViewModel(
     private val agentClient: AgentClient,
     private val mcpMessageFlow: MutableSharedFlow<McpMessage>,
     private val deviceController: DeviceController
-) :
-    ViewModel() {
+) : ViewModel() {
     private val _chatScreenUiState = MutableStateFlow(ChatScreenUiState())
     val chatScreenUiState: StateFlow<ChatScreenUiState> = _chatScreenUiState
 
+    private var installedAppsJob: Job? = null
+
     init {
         collectAgentEvent()
+        pollForConnectedDevices()
+    }
 
-        ticker(5000L, 0L).receiveAsFlow()
+    fun onAction(action: ChatScreenAction) {
+        when (action) {
+            is ChatScreenAction.DeviceSelected -> {
+                setSelectedDevice(action.deviceData)
+            }
+
+            is ChatScreenAction.PromptChanged -> {
+                updatePrompt(action.prompt)
+            }
+
+            ChatScreenAction.RunScenarioClicked -> {
+                addUserMessage()
+            }
+
+            is ChatScreenAction.AppSelected -> setSelectedApp(action.installedApp)
+            is ChatScreenAction.RemoveChip -> {
+                _chatScreenUiState.update { state ->
+                    val chipItems = state.chipItems.toMutableSet().apply {
+                        remove(action.chipItem)
+                    }
+                    state.copy(chipItems = chipItems)
+                }
+            }
+        }
+    }
+
+    private fun pollForConnectedDevices() {
+        ticker(DEVICE_POLL_INTERVAL, 0L).receiveAsFlow()
             .onEach {
                 val devices = withContext(Dispatchers.IO) { deviceController.getDevices() }
                 _chatScreenUiState.update { state ->
@@ -45,20 +75,15 @@ class ChatViewModel(
             }.launchIn(viewModelScope)
     }
 
-    fun onAction(action: ChatScreenAction) {
-        when (action) {
-            is ChatScreenAction.DeviceSelected -> {
-                setSelectedDevice(action)
-            }
-
-            is ChatScreenAction.PromptChanged -> {
-                updatePrompt(action.prompt)
-            }
-
-            ChatScreenAction.RunScenarioClicked -> {
-                addUserMessage()
-            }
-        }
+    private fun pollForInstalledApp(): Job {
+        return ticker(INSTALLED_PACKAGES_POLL_INTERVAL, 0L).receiveAsFlow()
+            .onEach {
+                val serial = _chatScreenUiState.value.selectedDevice?.serial
+                val listOfApps = withContext(Dispatchers.IO) { deviceController.listInstalledPackages(serial) }
+                _chatScreenUiState.update { state ->
+                    state.copy(installedApps = listOfApps.sorted().map { InstalledApp(packageName = it) })
+                }
+            }.launchIn(viewModelScope)
     }
 
     private fun collectAgentEvent() {
@@ -104,9 +129,24 @@ class ChatViewModel(
             }.launchIn(viewModelScope)
     }
 
-    private fun setSelectedDevice(action: ChatScreenAction.DeviceSelected) {
+    private fun setSelectedDevice(deviceData: DeviceData) {
         _chatScreenUiState.update { state ->
-            state.copy(selectedDevice = action.deviceData)
+            val chipItems = state.chipItems.toMutableSet().apply {
+                add(deviceData)
+            }
+            state.copy(selectedDevice = deviceData, chipItems = chipItems)
+        }
+
+        installedAppsJob?.cancel()
+        installedAppsJob = pollForInstalledApp()
+    }
+
+    private fun setSelectedApp(installedApp: InstalledApp) {
+        _chatScreenUiState.update { state ->
+            val chipItems = state.chipItems.toMutableSet().apply {
+                add(installedApp)
+            }
+            state.copy(selectedApp = installedApp, chipItems = chipItems)
         }
     }
 
