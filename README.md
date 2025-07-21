@@ -1,10 +1,12 @@
 # MCPs for Mobile
 
-MCPs for Mobile is a Kotlin-based project designed to interact with Android devices or emulators using an AI agent
-powered by Google's Gemini models. The agent can understand natural language commands to perform tasks on the connected
-Android device, such as listing apps, opening apps, interacting with UI elements, and more.
+**MCPs for Mobile** is a Kotlin-based project designed to interact with Android devices or emulators using an AI agent 
+powered by Google's Gemini models. The agent understands natural language commands and executes them on connected 
+Android devices—such as listing apps, opening apps, interacting with UI elements, and more.
 
-## Features
+---
+
+## ✨ Features
 
 * **AI-Powered Device Control:** Uses Google's Gemini AI to interpret commands and control Android devices.
 * **ADB Integration:** Leverages ADB (Android Debug Bridge) for device interaction.
@@ -12,17 +14,21 @@ Android device, such as listing apps, opening apps, interacting with UI elements
 * **Extensible:** New tools and capabilities can be added to expand the agent's functionality.
 * **Kotlin-Based:** Written in modern Kotlin, suitable for desktop execution.
 
+---
+
 ## ⚠️ Caution
 
 > **This AI agent can execute ADB commands automatically in response to your prompts without confirmation.**  
 > Please be cautious when using natural language commands, especially those that could modify app state, interact with UI, or perform sensitive operations.  
 > It is recommended to use this tool in controlled environments, such as development devices or emulators.
 
+---
+
 ## 🎥 Demo
 
-The following demo shows how the AI agent performs a sequence of actions on an Android device using natural language.
+This demo shows the AI agent performing a sequence of natural language-driven actions on an Android device:
 
-> **Prompt:**
+> **Prompt Example:**
 >
 > ```text
 > Find available android device,  
@@ -34,23 +40,46 @@ The following demo shows how the AI agent performs a sequence of actions on an A
 > AS a result tell me what you see on screen and tell me which tool did you use
 > ```
 
-[android_demo.webm](https://github.com/user-attachments/assets/4e993976-7e87-495d-882f-29e086f7e3f0)
+📹 [Watch the demo](https://github.com/user-attachments/assets/c18f5b3a-5c11-48e9-981f-68bbb99ab3f8)
 
-## Getting Started
+
+## 🚀 Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing
 purposes.
 
 ### Prerequisites
 
-* **Java Development Kit (JDK):** Version 17 or higher recommended.
-* **IntelliJ IDEA:** Recommended for development, but any IDE supporting Gradle and Kotlin will work.
-* **Android SDK:** Specifically, you need `adb` (Android Debug Bridge) installed and set `ANDROID_HOME` environment
-  variable in run configuration.
-* You can install this as part of Android Studio or as standalone platform tools.
-* **An Android Device or Emulator:** Ensure a device is connected via USB (with USB debugging enabled) or an emulator is
-  running. You can check connectivity by running `adb devices` in your terminal.
+- **Java Development Kit (JDK)**: Version 17 or higher.
+- **IntelliJ IDEA** *(Recommended)* or any Kotlin-compatible IDE with Gradle support.
+- **Android SDK + ADB**: Install ADB (Android Debug Bridge) and ensure `ANDROID_HOME` is configured.
+  - You can install ADB via Android Studio or [platform-tools](https://developer.android.com/studio/releases/platform-tools).
+- **Android Emulator or Device**: Make sure a device is connected and recognized via `adb devices`.
 
-## License
+---
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE.txt) file for details.
+## 🗺️ Roadmap
+
+Here's a list of planned improvements and upcoming features:
+
+- **Enhanced UI Representation**
+  - Improve the quality and detail of the UI dump to better represent real-world app scenarios.
+  - Support for rich component hierarchies to aid in accurate agent reasoning.
+
+- **Expanded ADB Capabilities**
+  - Introduce new ADB-based tools to support more device-level operations.
+  - Improve error handling and fallback mechanisms for device communication.
+
+- **Layout Optimizer Iteration**
+  - Refine and simplify layout structures for better LLM understanding.
+  - Remove redundant or low-signal elements from UI trees before interpretation.
+
+- **Migration to `adblib`**
+  - Investigate replacing `ddmlib` with `adblib` or `adblib-tools` for improved performance and maintainability.
+  - Compare feature parity and assess integration effort.
+
+---
+
+## 📄 License
+
+This project is licensed under the Apache License 2.0 – see the [LICENSE](LICENSE.txt) file for details.

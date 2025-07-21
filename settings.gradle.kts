@@ -33,5 +33,9 @@ plugins {
 }
 
 include(":composeApp")
+include(":feature:chat")
+include(":ui:theme")
 include(":mcp:adb")
 include(":mcp:agent")
+include(":mcp:domain")
+include(":shared")

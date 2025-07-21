@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>App Color Theme</title>
+    <style>
+        body {
+          background-color: #1B1B1B;
+          color: #FFFFFF;
+          font-family: Arial, sans-serif;
+          padding: 2rem;
+        }
+        h1, h2 {
+          color: #25D366;
+        }
+        .theme-section {
+          margin-bottom: 2rem;
+        }
+        .color-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+          gap: 1rem;
+        }
+        .color-box {
+          background-color: #2A2A2A;
+          padding: 0.5rem;
+          border-radius: 8px;
+          cursor: pointer;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .color-box:hover {
+          transform: scale(1.05);
+          box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
+        }
+        .color-sample {
+          height: 80px;
+          border-radius: 6px;
+        }
+        .color-name {
+          margin-top: 0.5rem;
+          font-size: 0.9rem;
+          text-align: center;
+          color: #CCCCCC;
+        }
+    </style>
+</head>
+<body>
+<h1>App Color Theme</h1>
+
+<div class="theme-section">
+    <h2>Light Theme</h2>
+    <div class="color-grid" id="light-theme"></div>
+</div>
+
+<div class="theme-section">
+    <h2>Dark Theme</h2>
+    <div class="color-grid" id="dark-theme"></div>
+</div>
+
+<div class="theme-section">
+    <h2>Chat Colors</h2>
+    <div class="color-grid" id="chat-colors"></div>
+</div>
+
+<script>
+    const COLORS = {
+      lightColors: {
+        primary: '#25D366', onPrimary: '#FFFFFF', primaryContainer: '#A8F0C0', onPrimaryContainer: '#004C1A', inversePrimary: '#6CDE7E',
+        secondary: '#006D3E', onSecondary: '#FFFFFF', secondaryContainer: '#97F0B8', onSecondaryContainer: '#00210D',
+        tertiary: '#006C4A', onTertiary: '#FFFFFF', tertiaryContainer: '#87F7C4', onTertiaryContainer: '#002114',
+        background: '#FAFAFA', onBackground: '#1C1C1C', surface: '#FFFFFF', onSurface: '#121212', surfaceVariant: '#F0F0F0',
+        onSurfaceVariant: '#424242', surfaceTint: '#25D366', inverseSurface: '#2C2C2C', inverseOnSurface: '#F5F5F5',
+        error: '#BA1A1A', onError: '#FFFFFF', errorContainer: '#FFDAD6', onErrorContainer: '#410002',
+        outline: '#757575', outlineVariant: '#BDBDBD', scrim: 'rgba(0,0,0,0.5)'
+      },
+
+      darkColors: {
+        primary: '#6CDE7E', onPrimary: '#003910', primaryContainer: '#005317', onPrimaryContainer: '#87F7A4', inversePrimary: '#25D366',
+        secondary: '#7CDA9D', onSecondary: '#003920', secondaryContainer: '#00522E', onSecondaryContainer: '#97F0B8',
+        tertiary: '#6BDBA7', onTertiary: '#003826', tertiaryContainer: '#005338', onTertiaryContainer: '#87F7C4',
+        background: '#121212', onBackground: '#E0E0E0', surface: '#1E1E1E', onSurface: '#E0E0E0', surfaceVariant: '#2C2C2C',
+        onSurfaceVariant: '#B0B0B0', surfaceTint: '#6CDE7E', inverseSurface: '#F5F5F5', inverseOnSurface: '#121212',
+        error: '#FFB4AB', onError: '#690005', errorContainer: '#93000A', onErrorContainer: '#FFDAD6',
+        outline: '#8C8C8C', outlineVariant: '#424242', scrim: 'rgba(0,0,0,0.7)'
+      },
+
+      chatColors: {
+        LightChatBackground: '#ECE5DD', LightSentMessageBackground: '#DCF8C6', LightReceivedMessageBackground: '#FFFFFF',
+        DarkChatBackground: '#121212', DarkSentMessageBackground: '#075E54', DarkReceivedMessageBackground: '#262D31'
+      }
+    };
+
+    function renderColors(containerId, colors) {
+      const container = document.getElementById(containerId);
+      for (const [name, color] of Object.entries(colors)) {
+        const box = document.createElement('div');
+        box.className = 'color-box';
+        box.innerHTML = `
+          <div class="color-sample" style="background-color: ${color}"></div>
+          <div class="color-name">${name}<br>${color}</div>
+        `;
+        box.addEventListener('click', () => {
+          navigator.clipboard.writeText(color);
+          alert(`Copied ${name}: ${color}`);
+        });
+        container.appendChild(box);
+      }
+    }
+
+    renderColors('light-theme', COLORS.lightColors);
+    renderColors('dark-theme', COLORS.darkColors);
+    renderColors('chat-colors', COLORS.chatColors);
+</script>
+</body>
+</html>

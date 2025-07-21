@@ -14,10 +14,19 @@ kotlin {
         val desktopMain by getting
 
         commonMain.dependencies {
+            implementation(project(":feature:chat"))
+            implementation(project(":ui:theme"))
             implementation(project(":mcp:adb"))
             implementation(project(":mcp:agent"))
+            implementation(project(":mcp:domain"))
 
             implementation(libs.ai.koog)
+
+            implementation(libs.koin.core)
+            implementation(libs.koin.core.viewmodel)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+            implementation(libs.koin.compose.viewmodel.navigation)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
