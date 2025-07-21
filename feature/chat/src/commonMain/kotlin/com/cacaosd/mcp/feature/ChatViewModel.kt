@@ -47,11 +47,36 @@ class ChatViewModel(
 
             is ChatScreenAction.AppSelected -> setSelectedApp(action.installedApp)
             is ChatScreenAction.RemoveChip -> {
-                _chatScreenUiState.update { state ->
-                    val chipItems = state.chipItems.toMutableSet().apply {
-                        remove(action.chipItem)
-                    }
-                    state.copy(chipItems = chipItems)
+                removeChipItem(action)
+            }
+        }
+    }
+
+    private fun removeChipItem(action: ChatScreenAction.RemoveChip) {
+        _chatScreenUiState.update { state ->
+            val chipItems = state.chipItems.toMutableSet().apply {
+                remove(action.chipItem)
+            }
+            when (action.chipItem) {
+                is DeviceData -> {
+                    installedAppsJob?.cancel()
+                    state.copy(
+                        selectedDevice = null,
+                        selectedApp = null,
+                        chipItems = emptySet(),
+                        installedApps = emptyList()
+                    )
+                }
+
+                is InstalledApp -> {
+                    state.copy(
+                        selectedApp = null,
+                        chipItems = chipItems
+                    )
+                }
+
+                else -> {
+                    state
                 }
             }
         }
@@ -131,10 +156,7 @@ class ChatViewModel(
 
     private fun setSelectedDevice(deviceData: DeviceData) {
         _chatScreenUiState.update { state ->
-            val chipItems = state.chipItems.toMutableSet().apply {
-                add(deviceData)
-            }
-            state.copy(selectedDevice = deviceData, chipItems = chipItems)
+            state.copy(selectedDevice = deviceData, selectedApp = null, chipItems = setOf(deviceData))
         }
 
         installedAppsJob?.cancel()
@@ -143,10 +165,8 @@ class ChatViewModel(
 
     private fun setSelectedApp(installedApp: InstalledApp) {
         _chatScreenUiState.update { state ->
-            val chipItems = state.chipItems.toMutableSet().apply {
-                add(installedApp)
-            }
-            state.copy(selectedApp = installedApp, chipItems = chipItems)
+            val deviceData = state.chipItems.find { it is DeviceData } ?: error("DeviceData should always be present.")
+            state.copy(selectedApp = installedApp, chipItems = setOf(deviceData, installedApp))
         }
     }
 
@@ -155,9 +175,25 @@ class ChatViewModel(
             _chatScreenUiState.update { state ->
                 state.copy(executionState = ExecutionState.Executing)
             }
-            val userMessage = _chatScreenUiState.value.prompt
-            mcpMessageFlow.emit(McpMessage.Request.User(message = userMessage)).also {
-                agentClient.executePrompt(userMessage)
+
+            with(chatScreenUiState.value) {
+                val userMessage = prompt
+                val serial = selectedDevice?.serial
+                val packageName = selectedApp?.packageName
+                val scenario = if (serial == null || packageName == null) {
+                    mcpMessageFlow.emit(
+                        McpMessage.Response.Assistant(
+                            content = "The device or app is not selected. So the scenario will be run in raw mode.",
+                            finishReason = null
+                        )
+                    )
+                    RAW_TEST_SCENARIO_TEMPLATE.format(userMessage).trimIndent()
+                } else {
+                    EXPLICIT_TEST_SCENARIO_TEMPLATE.format(serial, packageName, userMessage).trimIndent()
+                }
+                mcpMessageFlow.emit(McpMessage.Request.User(message = scenario)).also {
+                    agentClient.executePrompt(scenario)
+                }
             }
         }
     }
@@ -166,5 +202,17 @@ class ChatViewModel(
         _chatScreenUiState.update { state ->
             state.copy(prompt = prompt)
         }
+    }
+
+    companion object {
+        private const val EXPLICIT_TEST_SCENARIO_TEMPLATE = """
+            Device serial is %s
+            The application package name that will be launched is %s
+            The scenario to run: %s
+        """
+
+        private const val RAW_TEST_SCENARIO_TEMPLATE = """
+            The scenario to run: %s
+        """
     }
 }

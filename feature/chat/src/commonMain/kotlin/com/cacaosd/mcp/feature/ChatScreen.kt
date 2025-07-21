@@ -100,11 +100,14 @@ private fun RowScope.ChatContainer(chatScreenUiState: ChatScreenUiState, onActio
             )
         }
 
-        Column(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier.fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.surfaceVariant, shape = MaterialTheme.shapes.small)
+        ) {
             LazyColumn(
                 modifier = Modifier.weight(1f).fillMaxWidth(),
                 reverseLayout = true,
-                contentPadding = PaddingValues(vertical = AppTheme.sizes.medium)
+                contentPadding = PaddingValues(all = AppTheme.sizes.medium)
             ) {
                 items(chatScreenUiState.messages) { item ->
                     ChatBubble(item)
@@ -129,7 +132,10 @@ private fun RowScope.ScenarioInputContainer(
                 onAction(ChatScreenAction.PromptChanged(it))
             },
             label = {
-                Column(verticalArrangement = Arrangement.spacedBy(AppTheme.sizes.small)) {
+                Column(
+                    modifier = Modifier.padding(bottom = AppTheme.sizes.small),
+                    verticalArrangement = Arrangement.spacedBy(AppTheme.sizes.small)
+                ) {
                     Text(text = "Scenario", style = MaterialTheme.typography.labelLarge)
                     if (chatScreenUiState.chipItems.isNotEmpty()) {
                         ChipFlowRow(
@@ -245,7 +251,7 @@ private fun ChatBubble(message: MessageBubble) {
         else -> Alignment.TopStart
     }
     Box(
-        modifier = Modifier.fillMaxWidth().padding(vertical = AppTheme.sizes.medium),
+        modifier = Modifier.fillMaxWidth().padding(AppTheme.sizes.medium),
         contentAlignment = alignment
     ) {
         Column(

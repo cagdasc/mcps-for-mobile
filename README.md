@@ -5,6 +5,7 @@ MCPs for Mobile is a Kotlin project that enables control of Android devices or e
 processes natural language commands and performs corresponding actions on connected Android devices—such as listing
 installed apps, launching applications, and interacting with UI elements. It supports integration with local or cloud
 based language models.
+
 Features
 --------
 
