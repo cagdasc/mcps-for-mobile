@@ -64,26 +64,24 @@ private fun RowScope.ChatContainer(chatScreenUiState: ChatScreenUiState, onActio
                 itemText = { it.name },
             )
 
-            if (chatScreenUiState.selectedDevice != null) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(AppTheme.sizes.medium)
-                ) {
-                    DeviceSpecBox(
-                        icon = Icons.Filled.BatteryFull,
-                        spec = "Battery",
-                        value = "${chatScreenUiState.selectedDevice.batteryLevel}%"
-                    )
-                    DeviceSpecBox(
-                        icon = Icons.Filled.PhoneAndroid,
-                        spec = "Screen",
-                        value = chatScreenUiState.selectedDevice.screenSize ?: "Unknown Size"
-                    )
-                    DeviceSpecBox(
-                        icon = Icons.Filled.Api,
-                        spec = "API Level",
-                        value = chatScreenUiState.selectedDevice.osVersion
-                    )
-                }
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(AppTheme.sizes.medium)
+            ) {
+                DeviceSpecBox(
+                    icon = Icons.Filled.BatteryFull,
+                    spec = "Battery",
+                    value = "${chatScreenUiState.selectedDevice?.batteryLevel ?: "--"}%"
+                )
+                DeviceSpecBox(
+                    icon = Icons.Filled.PhoneAndroid,
+                    spec = "Screen",
+                    value = chatScreenUiState.selectedDevice?.let { it.screenSize ?: "Unknown size" } ?: "--"
+                )
+                DeviceSpecBox(
+                    icon = Icons.Filled.Api,
+                    spec = "API Level",
+                    value = chatScreenUiState.selectedDevice?.osVersion ?: "--"
+                )
             }
         }
 
