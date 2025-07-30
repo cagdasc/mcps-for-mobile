@@ -4,22 +4,24 @@ package com.cacaosd.mcp.agent.client
 
 import ai.koog.agents.core.agent.AIAgent
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
-import ai.koog.agents.core.tools.Tool
 import ai.koog.agents.core.tools.ToolRegistry
-import ai.koog.agents.core.tools.ToolResult
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.tokenizer.feature.MessageTokenizer
+import ai.koog.prompt.executor.llms.SingleLLMPromptExecutor
+import ai.koog.prompt.executor.ollama.client.OllamaClient
+import ai.koog.prompt.executor.ollama.client.toLLModel
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import com.cacaosd.mcp.agent.event.EventMapper
 import com.cacaosd.mcp.domain.AgentClient
 import com.cacaosd.mcp.domain.AgentClientFactory
 import com.cacaosd.mcp.domain.McpMessage
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 
 class DefaultAgentClientFactory(
     private val toolRegistry: ToolRegistry,
-    private val aiAgentStrategy: AIAgentStrategy,
+    private val aiAgentStrategy: AIAgentStrategy<String, String>,
     private val eventMapper: EventMapper,
     private val agentEventFlow: MutableSharedFlow<McpMessage>
 ) :
@@ -28,6 +30,7 @@ class DefaultAgentClientFactory(
         val builder = provideGoogleAgentBuilder(apiKey)
             .withSystemPrompt(systemPrompt)
             .withMaxIterations(50)
+            .withTemperature(.2)
             .withTools(toolRegistry)
             .withStrategy(aiAgentStrategy)
             .withFeatures {
@@ -40,7 +43,29 @@ class DefaultAgentClientFactory(
     override fun createMetaLLamaAgent(): AgentClient {
         val builder = provideMataLLama32AgentBuilder()
             .withSystemPrompt(systemPrompt)
-            .withMaxIterations(10)
+            .withMaxIterations(50)
+            .withTemperature(.2)
+            .withTools(toolRegistry)
+            .withStrategy(aiAgentStrategy)
+            .withFeatures {
+                installEventHandler(eventMapper = eventMapper, mcpMessageFlow = agentEventFlow)
+                installSimpleRegexTokenizer()
+            }
+        return DefaultAgentClient(builder)
+    }
+
+    //scroll and find "Android Dev Summit" item and click like button
+
+    override fun createCustomModel(modelName: String): AgentClient {
+        val ollamaClient = OllamaClient()
+        val llmModel = runBlocking {
+            ollamaClient.getModels().find { it.name == modelName }?.toLLModel()
+                ?: error("Model not found")
+        }
+        val builder = AgentClientBuilder.create(llmModel, SingleLLMPromptExecutor(ollamaClient))
+            .withSystemPrompt(systemPrompt)
+            .withMaxIterations(50)
+            .withTemperature(.2)
             .withTools(toolRegistry)
             .withStrategy(aiAgentStrategy)
             .withFeatures {
@@ -61,14 +86,17 @@ class DefaultAgentClientFactory(
         mcpMessageFlow: MutableSharedFlow<McpMessage>
     ) {
         install(EventHandler) {
-            onAfterLLMCall { prompt, tools, model, responses, sessionUuid ->
+            onAfterLLMCall { context ->
+                val responses = context.responses
                 responses.forEach { response ->
                     val mcpMessage = eventMapper.mapToMcpMessage(response)
                     mcpMessageFlow.emit(mcpMessage)
                 }
             }
 
-            onAgentRunError { strategyName, sessionUuid, throwable ->
+            onAgentRunError { context ->
+                val strategyName = context.runId
+                val throwable = context.throwable
                 mcpMessageFlow.emit(
                     McpMessage.Response.AssistantWithError(
                         strategyName = strategyName,
@@ -77,7 +105,7 @@ class DefaultAgentClientFactory(
                 )
             }
 
-            onToolCallResult { tool: Tool<*, *>, toolArgs: Tool.Args, result: ToolResult? ->
+            onToolCallResult { context ->
                 // TODO: Handle tool call result if needed
             }
         }

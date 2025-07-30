@@ -3,13 +3,9 @@ package com.cacaosd.mcp.agent
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.*
 
-fun toolExecutionStrategy(name: String): AIAgentStrategy {
+fun toolExecutionStrategy(name: String): AIAgentStrategy<String, String> {
     return strategy(name) {
         val nodeSendInput by nodeLLMRequest()
         val nodeExecuteTool by nodeExecuteTool()
