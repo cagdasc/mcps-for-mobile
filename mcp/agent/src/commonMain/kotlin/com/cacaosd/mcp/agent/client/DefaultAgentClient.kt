@@ -15,6 +15,8 @@ class DefaultAgentClient(
     }
 
     override suspend fun stop() {
-        agent.close()
+        // FIXME: This is buggy.
+        // https://github.com/JetBrains/koog/issues/569
+        agent.reportProblem(IllegalStateException("AgentClient is stopped."))
     }
 }

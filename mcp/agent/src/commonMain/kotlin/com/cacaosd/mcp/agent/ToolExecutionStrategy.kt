@@ -21,24 +21,15 @@ fun toolExecutionStrategy(name: String): AIAgentStrategy<String, String> {
         )
 
         // If the LLM calls a tool, execute it
-        edge(
-            (nodeSendInput forwardTo nodeExecuteTool)
-                    onToolCall { true }
-        )
+        edge((nodeSendInput forwardTo nodeExecuteTool) onToolCall { true })
 
         // Send the tool result back to the LLM
-        edge(nodeExecuteTool forwardTo nodeSendToolResult)
+        edge((nodeExecuteTool forwardTo nodeSendToolResult))
 
         // If the LLM calls another tool, execute it
-        edge(
-            (nodeSendToolResult forwardTo nodeExecuteTool)
-                    onToolCall { true }
-        )
+        edge((nodeSendToolResult forwardTo nodeExecuteTool) onToolCall { true })
 
         // If the LLM responds with a message, finish
-        edge(
-            (nodeSendToolResult forwardTo nodeFinish)
-                    onAssistantMessage { true }
-        )
+        edge((nodeSendToolResult forwardTo nodeFinish) onAssistantMessage { true })
     }
 }

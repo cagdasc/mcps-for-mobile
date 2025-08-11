@@ -33,22 +33,12 @@ class ChatViewModel(
 
     fun onAction(action: ChatScreenAction) {
         when (action) {
-            is ChatScreenAction.DeviceSelected -> {
-                setSelectedDevice(action.deviceData)
-            }
-
-            is ChatScreenAction.PromptChanged -> {
-                updatePrompt(action.prompt)
-            }
-
-            ChatScreenAction.RunScenarioClicked -> {
-                addUserMessage()
-            }
-
+            is ChatScreenAction.DeviceSelected -> setSelectedDevice(action.deviceData)
+            is ChatScreenAction.PromptChanged -> updatePrompt(action.prompt)
+            ChatScreenAction.RunScenarioClicked -> addUserMessage()
             is ChatScreenAction.AppSelected -> setSelectedApp(action.installedApp)
-            is ChatScreenAction.RemoveChip -> {
-                removeChipItem(action)
-            }
+            is ChatScreenAction.RemoveChip -> removeChipItem(action)
+            ChatScreenAction.StopScenarioClicked -> stopScenario()
         }
     }
 
@@ -115,22 +105,22 @@ class ChatViewModel(
         mcpMessageFlow
             .map { event ->
                 when (event) {
-                    is McpMessage.Request.User -> MessageBubble.Companion.request(
+                    is McpMessage.Request.User -> MessageBubble.request(
                         sender = MessageOwner.User,
                         content = event.message
                     )
 
-                    is McpMessage.Response.Assistant -> MessageBubble.Companion.response(
+                    is McpMessage.Response.Assistant -> MessageBubble.response(
                         sender = MessageOwner.Assistant,
                         content = event.content.trimIndent()
                     )
 
-                    is McpMessage.Request.Tool -> MessageBubble.Companion.request(
+                    is McpMessage.Request.Tool -> MessageBubble.request(
                         sender = MessageOwner.Tool(toolName = event.toolName),
                         content = event.content
                     )
 
-                    is McpMessage.Response.AssistantWithError -> MessageBubble.Companion.response(
+                    is McpMessage.Response.AssistantWithError -> MessageBubble.response(
                         sender = MessageOwner.Assistant,
                         content = "Error happened while executing the prompt",
                         throwable = event.throwable
@@ -201,6 +191,16 @@ class ChatViewModel(
     private fun updatePrompt(prompt: String) {
         _chatScreenUiState.update { state ->
             state.copy(prompt = prompt)
+        }
+    }
+
+    private fun stopScenario() {
+        viewModelScope.launch(Dispatchers.Default) {
+            println(currentCoroutineContext())
+            _chatScreenUiState.update { state ->
+                state.copy(executionState = ExecutionState.Idle)
+            }
+            agentClient.stop()
         }
     }
 
