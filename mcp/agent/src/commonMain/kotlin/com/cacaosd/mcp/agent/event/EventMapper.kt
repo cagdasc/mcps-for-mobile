@@ -4,8 +4,8 @@ import ai.koog.prompt.message.Message
 import com.cacaosd.mcp.domain.McpMessage
 
 class EventMapper {
-    fun mapToMcpMessage(message: Message.Response): McpMessage {
-        return when (message) {
+    fun mapToMcpMessages(message: Message.Response): List<McpMessage> {
+        val mcpMessage = when (message) {
             is Message.Assistant -> McpMessage.Response.Assistant(
                 content = message.content,
                 finishReason = message.finishReason
@@ -16,5 +16,13 @@ class EventMapper {
                 content = message.content
             )
         }
+
+        val metadataMessage = McpMessage.Response.Metadata.Token(
+            inputTokensCount = message.metaInfo.inputTokensCount ?: 0,
+            outputTokensCount = message.metaInfo.outputTokensCount ?: 0,
+            totalTokensCount = message.metaInfo.totalTokensCount ?: 0
+        )
+
+        return listOf(mcpMessage, metadataMessage)
     }
 }

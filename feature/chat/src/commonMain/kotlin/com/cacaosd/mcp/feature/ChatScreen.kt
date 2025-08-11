@@ -37,6 +37,7 @@ fun ChatScreen(
         ) {
             ScenarioInputContainer(chatScreenUiState, onAction)
             ChatContainer(chatScreenUiState, onAction)
+            TokenInfoBox(chatScreenUiState)
         }
     }
 }
@@ -223,6 +224,40 @@ private fun RowScope.ScenarioInputContainer(
 }
 
 @Composable
+private fun RowScope.TokenInfoBox(chatScreenUiState: ChatScreenUiState) {
+    Column(
+        modifier = Modifier.weight(.3f).background(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = MaterialTheme.shapes.small
+        ).padding(AppTheme.sizes.medium),
+    ) {
+        Text(
+            text = "Tokens",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Text(
+            text = "Input: ${chatScreenUiState.inputTokensCount}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Text(
+            text = "Output: ${chatScreenUiState.outputTokensCount}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+
+        Text(
+            text = "Total: ${chatScreenUiState.totalTokensCount}",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+    }
+}
+
+@Composable
 private fun DeviceSpecBox(
     modifier: Modifier = Modifier,
     icon: ImageVector,
@@ -308,7 +343,10 @@ internal fun ChatScreenPreview() {
                 prompt = "",
                 chipItems = emptySet(),
                 messages = emptyList(),
-                executionState = ExecutionState.Idle
+                executionState = ExecutionState.Idle,
+                inputTokensCount = "0",
+                outputTokensCount = "0",
+                totalTokensCount = "0"
             ),
             onAction = {}
         )

@@ -11,6 +11,8 @@ import com.cacaosd.mcp.domain.McpMessage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.*
+import java.text.NumberFormat
+import java.util.*
 import kotlin.time.ExperimentalTime
 
 private const val DEVICE_POLL_INTERVAL = 5000L
@@ -25,6 +27,7 @@ class ChatViewModel(
     val chatScreenUiState: StateFlow<ChatScreenUiState> = _chatScreenUiState
 
     private var installedAppsJob: Job? = null
+    private val numberFormat: NumberFormat = NumberFormat.getNumberInstance(Locale.UK)
 
     init {
         collectAgentEvent()
@@ -125,8 +128,20 @@ class ChatViewModel(
                         content = "Error happened while executing the prompt",
                         throwable = event.throwable
                     )
+
+                    is McpMessage.Response.Metadata.Token -> {
+                        _chatScreenUiState.update { state ->
+                            state.copy(
+                                inputTokensCount = numberFormat.format(event.inputTokensCount),
+                                outputTokensCount = numberFormat.format(event.outputTokensCount),
+                                totalTokensCount = numberFormat.format(event.totalTokensCount)
+                            )
+                        }
+                        null
+                    }
                 }
             }
+            .filterNotNull()
             .onEach { message ->
                 _chatScreenUiState.update { state ->
                     state.copy(

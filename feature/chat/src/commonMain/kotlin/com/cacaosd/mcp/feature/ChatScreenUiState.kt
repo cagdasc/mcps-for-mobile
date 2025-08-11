@@ -12,6 +12,9 @@ data class ChatScreenUiState(
     val prompt: String = "",
     val messages: List<MessageBubble> = emptyList(),
     val executionState: ExecutionState = ExecutionState.Idle,
+    val inputTokensCount: String = "0",
+    val outputTokensCount: String = "0",
+    val totalTokensCount: String = "0",
 )
 
 data class DeviceData(

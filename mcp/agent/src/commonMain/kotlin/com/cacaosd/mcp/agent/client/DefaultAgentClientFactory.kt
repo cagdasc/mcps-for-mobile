@@ -16,6 +16,8 @@ import com.cacaosd.mcp.domain.AgentClient
 import com.cacaosd.mcp.domain.AgentClientFactory
 import com.cacaosd.mcp.domain.McpMessage
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asFlow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.runBlocking
 import kotlin.uuid.ExperimentalUuidApi
 
@@ -88,10 +90,11 @@ class DefaultAgentClientFactory(
         install(EventHandler) {
             onAfterLLMCall { context ->
                 val responses = context.responses
-                responses.forEach { response ->
-                    val mcpMessage = eventMapper.mapToMcpMessage(response)
-                    mcpMessageFlow.emit(mcpMessage)
-                }
+                val mcpMessages = responses.map { response ->
+                    eventMapper.mapToMcpMessages(response)
+                }.flatten()
+
+                mcpMessageFlow.emitAll(mcpMessages.asFlow())
             }
 
             onAgentRunError { context ->
