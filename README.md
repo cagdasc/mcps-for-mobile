@@ -28,15 +28,11 @@ Demo
 
 Example prompt:
 
-> Find available android device,
-> List installed apps,
-> Open "com.google.android.youtube" app,
-> Dump ui and find Search bar, click it and type "First video in YouTube" and send done event,
-> Dump ui search result list and tap first element in result list.
-> As a result tell me what you see on screen and tell me which tool did you use
+> Find search bar in screen, type "First video in YouTube" and send done event. Once you get search results get list in
+> screen and click first element. After that tell me what did you do and what you see in the screen.
 
-See demo video:
-[![alt text](demo/demo_cover.png)](https://github.com/user-attachments/assets/32c89a93-2cdf-4515-82ed-a82e62724cc3)
+See demo video (or go [demo](demo) directory):
+[![Video thumbnail](demo/demo_cover.png)](https://github.com/user-attachments/assets/85943f11-f6da-4352-9e14-4c15f83ecedc)
 
 Getting Started
 ---------------
@@ -46,7 +42,7 @@ Prerequisites:
 - Java Development Kit (JDK) 17 or higher
 - IntelliJ IDEA or any Kotlin-compatible IDE with Gradle support
 - Android SDK and ADB (Android Debug Bridge)
-  - Install ADB via Android Studio or platform-tools
+    - Install ADB via Android Studio or platform-tools
 - Android emulator or device connected and recognized by `adb devices`
 
 Roadmap
