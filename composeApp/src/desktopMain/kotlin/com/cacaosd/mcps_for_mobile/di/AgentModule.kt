@@ -29,4 +29,8 @@ val agentModule = module {
         val agentClientFactory = get<AgentClientFactory>()
         agentClientFactory.createMetaLLamaAgent()
     }
+    single(CustomAgentQualifier) {
+        val agentClientFactory = get<AgentClientFactory>()
+        agentClientFactory.createCustomModel("qwen3:14b")
+    }
 }

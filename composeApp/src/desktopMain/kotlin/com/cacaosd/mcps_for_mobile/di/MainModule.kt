@@ -8,24 +8,19 @@ import org.koin.core.qualifier.TypeQualifier
 import org.koin.dsl.module
 import kotlin.uuid.ExperimentalUuidApi
 
-internal object GoogleAgentQualifier : Qualifier {
-    override val value: QualifierValue
-        get() = TypeQualifier(GoogleAgentQualifier::class).value
-}
+internal object GoogleAgentQualifier : SelfResolveQualifier()
 
-internal object MetaAgentQualifier : Qualifier {
-    override val value: QualifierValue
-        get() = TypeQualifier(MetaAgentQualifier::class).value
-}
+internal object MetaAgentQualifier : SelfResolveQualifier()
 
-internal object McpMessageFlowQualifier : Qualifier {
-    override val value: QualifierValue
-        get() = TypeQualifier(McpMessageFlowQualifier::class).value
-}
+internal object CustomAgentQualifier : SelfResolveQualifier()
 
-internal object AndroidDeviceControllerQualifier : Qualifier {
+internal object McpMessageFlowQualifier : SelfResolveQualifier()
+
+internal object AndroidDeviceControllerQualifier : SelfResolveQualifier()
+
+internal abstract class SelfResolveQualifier : Qualifier {
     override val value: QualifierValue
-        get() = TypeQualifier(AndroidDeviceControllerQualifier::class).value
+        get() = TypeQualifier(this::class).value
 }
 
 val mainModule = module {

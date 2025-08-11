@@ -11,6 +11,8 @@ import com.cacaosd.mcp.domain.McpMessage
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.*
+import java.text.NumberFormat
+import java.util.*
 import kotlin.time.ExperimentalTime
 
 private const val DEVICE_POLL_INTERVAL = 5000L
@@ -25,6 +27,7 @@ class ChatViewModel(
     val chatScreenUiState: StateFlow<ChatScreenUiState> = _chatScreenUiState
 
     private var installedAppsJob: Job? = null
+    private val numberFormat: NumberFormat = NumberFormat.getNumberInstance(Locale.UK)
 
     init {
         collectAgentEvent()
@@ -33,25 +36,40 @@ class ChatViewModel(
 
     fun onAction(action: ChatScreenAction) {
         when (action) {
-            is ChatScreenAction.DeviceSelected -> {
-                setSelectedDevice(action.deviceData)
-            }
-
-            is ChatScreenAction.PromptChanged -> {
-                updatePrompt(action.prompt)
-            }
-
-            ChatScreenAction.RunScenarioClicked -> {
-                addUserMessage()
-            }
-
+            is ChatScreenAction.DeviceSelected -> setSelectedDevice(action.deviceData)
+            is ChatScreenAction.PromptChanged -> updatePrompt(action.prompt)
+            ChatScreenAction.RunScenarioClicked -> addUserMessage()
             is ChatScreenAction.AppSelected -> setSelectedApp(action.installedApp)
-            is ChatScreenAction.RemoveChip -> {
-                _chatScreenUiState.update { state ->
-                    val chipItems = state.chipItems.toMutableSet().apply {
-                        remove(action.chipItem)
-                    }
-                    state.copy(chipItems = chipItems)
+            is ChatScreenAction.RemoveChip -> removeChipItem(action)
+            ChatScreenAction.StopScenarioClicked -> stopScenario()
+        }
+    }
+
+    private fun removeChipItem(action: ChatScreenAction.RemoveChip) {
+        _chatScreenUiState.update { state ->
+            val chipItems = state.chipItems.toMutableSet().apply {
+                remove(action.chipItem)
+            }
+            when (action.chipItem) {
+                is DeviceData -> {
+                    installedAppsJob?.cancel()
+                    state.copy(
+                        selectedDevice = null,
+                        selectedApp = null,
+                        chipItems = emptySet(),
+                        installedApps = emptyList()
+                    )
+                }
+
+                is InstalledApp -> {
+                    state.copy(
+                        selectedApp = null,
+                        chipItems = chipItems
+                    )
+                }
+
+                else -> {
+                    state
                 }
             }
         }
@@ -90,28 +108,40 @@ class ChatViewModel(
         mcpMessageFlow
             .map { event ->
                 when (event) {
-                    is McpMessage.Request.User -> MessageBubble.Companion.request(
+                    is McpMessage.Request.User -> MessageBubble.request(
                         sender = MessageOwner.User,
                         content = event.message
                     )
 
-                    is McpMessage.Response.Assistant -> MessageBubble.Companion.response(
+                    is McpMessage.Response.Assistant -> MessageBubble.response(
                         sender = MessageOwner.Assistant,
                         content = event.content.trimIndent()
                     )
 
-                    is McpMessage.Request.Tool -> MessageBubble.Companion.request(
+                    is McpMessage.Request.Tool -> MessageBubble.request(
                         sender = MessageOwner.Tool(toolName = event.toolName),
                         content = event.content
                     )
 
-                    is McpMessage.Response.AssistantWithError -> MessageBubble.Companion.response(
+                    is McpMessage.Response.AssistantWithError -> MessageBubble.response(
                         sender = MessageOwner.Assistant,
                         content = "Error happened while executing the prompt",
                         throwable = event.throwable
                     )
+
+                    is McpMessage.Response.Metadata.Token -> {
+                        _chatScreenUiState.update { state ->
+                            state.copy(
+                                inputTokensCount = numberFormat.format(event.inputTokensCount),
+                                outputTokensCount = numberFormat.format(event.outputTokensCount),
+                                totalTokensCount = numberFormat.format(event.totalTokensCount)
+                            )
+                        }
+                        null
+                    }
                 }
             }
+            .filterNotNull()
             .onEach { message ->
                 _chatScreenUiState.update { state ->
                     state.copy(
@@ -131,10 +161,7 @@ class ChatViewModel(
 
     private fun setSelectedDevice(deviceData: DeviceData) {
         _chatScreenUiState.update { state ->
-            val chipItems = state.chipItems.toMutableSet().apply {
-                add(deviceData)
-            }
-            state.copy(selectedDevice = deviceData, chipItems = chipItems)
+            state.copy(selectedDevice = deviceData, selectedApp = null, chipItems = setOf(deviceData))
         }
 
         installedAppsJob?.cancel()
@@ -143,10 +170,8 @@ class ChatViewModel(
 
     private fun setSelectedApp(installedApp: InstalledApp) {
         _chatScreenUiState.update { state ->
-            val chipItems = state.chipItems.toMutableSet().apply {
-                add(installedApp)
-            }
-            state.copy(selectedApp = installedApp, chipItems = chipItems)
+            val deviceData = state.chipItems.find { it is DeviceData } ?: error("DeviceData should always be present.")
+            state.copy(selectedApp = installedApp, chipItems = setOf(deviceData, installedApp))
         }
     }
 
@@ -155,9 +180,25 @@ class ChatViewModel(
             _chatScreenUiState.update { state ->
                 state.copy(executionState = ExecutionState.Executing)
             }
-            val userMessage = _chatScreenUiState.value.prompt
-            mcpMessageFlow.emit(McpMessage.Request.User(message = userMessage)).also {
-                agentClient.executePrompt(userMessage)
+
+            with(chatScreenUiState.value) {
+                val userMessage = prompt
+                val serial = selectedDevice?.serial
+                val packageName = selectedApp?.packageName
+                val scenario = if (serial == null || packageName == null) {
+                    mcpMessageFlow.emit(
+                        McpMessage.Response.Assistant(
+                            content = "The device or app is not selected. So the scenario will be run in raw mode.",
+                            finishReason = null
+                        )
+                    )
+                    RAW_TEST_SCENARIO_TEMPLATE.format(userMessage).trimIndent()
+                } else {
+                    EXPLICIT_TEST_SCENARIO_TEMPLATE.format(serial, packageName, userMessage).trimIndent()
+                }
+                mcpMessageFlow.emit(McpMessage.Request.User(message = scenario)).also {
+                    agentClient.executePrompt(scenario)
+                }
             }
         }
     }
@@ -166,5 +207,27 @@ class ChatViewModel(
         _chatScreenUiState.update { state ->
             state.copy(prompt = prompt)
         }
+    }
+
+    private fun stopScenario() {
+        viewModelScope.launch(Dispatchers.Default) {
+            println(currentCoroutineContext())
+            _chatScreenUiState.update { state ->
+                state.copy(executionState = ExecutionState.Idle)
+            }
+            agentClient.stop()
+        }
+    }
+
+    companion object {
+        private const val EXPLICIT_TEST_SCENARIO_TEMPLATE = """
+            Device serial is %s
+            The application package name that will be launched is %s
+            The scenario to run: %s
+        """
+
+        private const val RAW_TEST_SCENARIO_TEMPLATE = """
+            The scenario to run: %s
+        """
     }
 }

@@ -19,5 +19,6 @@ sealed interface ChatScreenAction {
     data class AppSelected(val installedApp: InstalledApp) : ChatScreenAction
     data class PromptChanged(val prompt: String) : ChatScreenAction
     data class RemoveChip(val chipItem: ChipItem) : ChatScreenAction
-    object RunScenarioClicked : ChatScreenAction
+    data object RunScenarioClicked : ChatScreenAction
+    data object StopScenarioClicked : ChatScreenAction
 }

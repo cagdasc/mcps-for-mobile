@@ -3,13 +3,9 @@ package com.cacaosd.mcp.agent
 import ai.koog.agents.core.agent.entity.AIAgentStrategy
 import ai.koog.agents.core.dsl.builder.forwardTo
 import ai.koog.agents.core.dsl.builder.strategy
-import ai.koog.agents.core.dsl.extension.nodeExecuteTool
-import ai.koog.agents.core.dsl.extension.nodeLLMRequest
-import ai.koog.agents.core.dsl.extension.nodeLLMSendToolResult
-import ai.koog.agents.core.dsl.extension.onAssistantMessage
-import ai.koog.agents.core.dsl.extension.onToolCall
+import ai.koog.agents.core.dsl.extension.*
 
-fun toolExecutionStrategy(name: String): AIAgentStrategy {
+fun toolExecutionStrategy(name: String): AIAgentStrategy<String, String> {
     return strategy(name) {
         val nodeSendInput by nodeLLMRequest()
         val nodeExecuteTool by nodeExecuteTool()
@@ -25,24 +21,15 @@ fun toolExecutionStrategy(name: String): AIAgentStrategy {
         )
 
         // If the LLM calls a tool, execute it
-        edge(
-            (nodeSendInput forwardTo nodeExecuteTool)
-                    onToolCall { true }
-        )
+        edge((nodeSendInput forwardTo nodeExecuteTool) onToolCall { true })
 
         // Send the tool result back to the LLM
-        edge(nodeExecuteTool forwardTo nodeSendToolResult)
+        edge((nodeExecuteTool forwardTo nodeSendToolResult))
 
         // If the LLM calls another tool, execute it
-        edge(
-            (nodeSendToolResult forwardTo nodeExecuteTool)
-                    onToolCall { true }
-        )
+        edge((nodeSendToolResult forwardTo nodeExecuteTool) onToolCall { true })
 
         // If the LLM responds with a message, finish
-        edge(
-            (nodeSendToolResult forwardTo nodeFinish)
-                    onAssistantMessage { true }
-        )
+        edge((nodeSendToolResult forwardTo nodeFinish) onAssistantMessage { true })
     }
 }

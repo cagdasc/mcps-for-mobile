@@ -29,7 +29,7 @@ class AgentClientBuilder private constructor(
     private var systemPrompt: String? = null
     private var additionalPrompts: MutableList<PromptBuilder.() -> Unit> = mutableListOf()
     private var toolRegistry: ToolRegistry = ToolRegistry.EMPTY
-    private var strategy: AIAgentStrategy = singleRunStrategy()
+    private var strategy: AIAgentStrategy<String, String> = singleRunStrategy()
     private var features: FeatureContext.() -> Unit = {}
     private var maxIterations: Int = DEFAULT_MAX_ITERATIONS
     private var temperature: Double = DEFAULT_TEMPERATURE
@@ -80,7 +80,7 @@ class AgentClientBuilder private constructor(
      * @param strategy The strategy defining how the agent will run (e.g., single run, loop).
      * @return The builder instance for chaining.
      */
-    fun withStrategy(strategy: AIAgentStrategy): AgentClientBuilder {
+    fun withStrategy(strategy: AIAgentStrategy<String, String>): AgentClientBuilder {
         this.strategy = strategy
         return this
     }
@@ -173,7 +173,7 @@ class AgentClientBuilder private constructor(
      * @return The final, configured AIAgent instance.
      * @throws IllegalStateException if the system prompt has not been set.
      */
-    fun build(): AIAgent {
+    fun build(): AIAgent<String, String> {
         val finalSystemPrompt = systemPrompt
             ?: throw IllegalStateException("System prompt must be set before building the agent")
 
@@ -181,7 +181,10 @@ class AgentClientBuilder private constructor(
             promptExecutor = executor,
             strategy = strategy,
             agentConfig = AIAgentConfig(
-                prompt = prompt("chat", params = LLMParams(temperature = temperature)) {
+                prompt = prompt(
+                    "chat",
+                    params = LLMParams(temperature = temperature, toolChoice = LLMParams.ToolChoice.Auto)
+                ) {
                     system(finalSystemPrompt)
                     additionalPrompts.forEach { it() }
                 },
