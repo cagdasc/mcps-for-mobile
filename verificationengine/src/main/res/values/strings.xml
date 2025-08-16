@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">Verification Engine</string>
+    <string name="accessibility_service_description">Agent tracking service</string>
+</resources>
