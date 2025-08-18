@@ -1,7 +1,7 @@
 <component name="ProjectRunConfigurationManager">
-    <configuration default="false" name="verificationengine" type="AndroidRunConfigurationType"
-                   factoryName="Android App" activateToolWindowBeforeRun="false">
-        <module name="MCPsForMobile.verificationengine"/>
+    <configuration default="false" name="interactionengine" type="AndroidRunConfigurationType" factoryName="Android App"
+                   activateToolWindowBeforeRun="false">
+        <module name="MCPsForMobile.interaction-engine"/>
         <option name="ANDROID_RUN_CONFIGURATION_SCHEMA_VERSION" value="1"/>
         <option name="DEPLOY" value="true"/>
         <option name="DEPLOY_APK_FROM_BUNDLE" value="false"/>

@@ -1,15 +1,16 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlinx.serialization)
 }
 
 android {
-    namespace = "com.cacaosd.verificationengine"
+    namespace = "com.cacaosd.interaction_engine"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.cacaosd.verificationengine"
-        minSdk = 28
+        applicationId = "com.cacaosd.interaction_engine"
+        minSdk = 29
         targetSdk = 36
         versionCode = 1
         versionName = "1.0"
@@ -34,4 +35,7 @@ android {
 
 dependencies {
     implementation(libs.kotlinx.coroutines.core)
+    implementation(libs.kotlinx.datetime)
+    implementation(libs.kotlinx.serialization.json)
+    implementation("androidx.lifecycle:lifecycle-service:2.9.2")
 }
