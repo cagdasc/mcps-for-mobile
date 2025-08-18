@@ -2,7 +2,7 @@ package com.cacaosd.interaction_engine.model
 
 import android.view.accessibility.AccessibilityEvent
 
-fun windowChangeToText(flag: Int): String = when (flag) {
+fun windowChangeToText(flag: Int): String? = when (flag) {
     AccessibilityEvent.WINDOWS_CHANGE_ADDED -> "Window Added"
     AccessibilityEvent.WINDOWS_CHANGE_REMOVED -> "Window Removed"
     AccessibilityEvent.WINDOWS_CHANGE_TITLE -> "Window Title Changed"
@@ -14,5 +14,5 @@ fun windowChangeToText(flag: Int): String = when (flag) {
     AccessibilityEvent.WINDOWS_CHANGE_PARENT -> "Window Parent Changed"
     AccessibilityEvent.WINDOWS_CHANGE_CHILDREN -> "Window Children Changed"
     AccessibilityEvent.WINDOWS_CHANGE_PIP -> "Window Entered PIP"
-    else -> "Unknown Window Change"
+    else -> null
 }

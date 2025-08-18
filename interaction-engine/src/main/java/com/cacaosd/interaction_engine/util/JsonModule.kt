@@ -6,5 +6,6 @@ val json = Json {
     prettyPrint = true          // formatted output
     isLenient = false            // allow non-strict JSON
     ignoreUnknownKeys = false    // ignore fields not in your class
-    encodeDefaults = true       // include default values in output
+    encodeDefaults = false       // include default values in output
+    explicitNulls = false
 }

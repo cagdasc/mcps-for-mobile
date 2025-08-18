@@ -7,6 +7,7 @@ import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import androidx.lifecycle.lifecycleScope
 import com.cacaosd.interaction_engine.model.AccessibilityEventModel
+import com.cacaosd.interaction_engine.model.contentChangeTypeToString
 import com.cacaosd.interaction_engine.model.eventTypeToText
 import com.cacaosd.interaction_engine.model.windowChangeToText
 import com.cacaosd.interaction_engine.receiver.InteractionEvent
@@ -93,10 +94,11 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
                                     classname = accessibilityEvent.source?.className.toString(),
                                     text = accessibilityEvent.source?.text.toString()
                                 ),
-                                windowChanges = windowChangeToText(accessibilityEvent.windowChanges)
+                                windowChanges = windowChangeToText(accessibilityEvent.windowChanges),
+                                contentChangeType = contentChangeTypeToString(accessibilityEvent.contentChangeTypes)
                             )
                         }
-                        .filter { it.applicationPackage == interactionEventData.appPackage }
+                        .filter { it.applicationPackage == null || it.applicationPackage == interactionEventData.appPackage }
                         .onEach(eventCollection::add)
                         .launchIn(lifecycleScope)
                 }
@@ -109,6 +111,7 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
                         fileName = "${applicationPackage}_agent_events_${Clock.System.now().epochSeconds}.log",
                         content = json.encodeToString(eventCollection)
                     )
+                    eventCollection.clear()
                 }
             }
         }

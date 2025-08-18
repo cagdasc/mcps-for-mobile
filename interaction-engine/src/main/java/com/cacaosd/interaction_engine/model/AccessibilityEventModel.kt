@@ -13,7 +13,8 @@ data class AccessibilityEventModel(
     val viewClass: String? = null,
     val text: String,
     val source: Source,
-    val windowChanges: String
+    val windowChanges: String? = null,
+    val contentChangeType: String? = null
 ) {
     @Serializable
     data class Source(
