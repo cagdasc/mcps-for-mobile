@@ -16,7 +16,7 @@ val agentModule = module {
             toolRegistry = get(),
             aiAgentStrategy = get(),
             eventMapper = get(),
-            agentEventFlow = get(McpMessageFlowQualifier)
+            agentEventFlow = get(AgentMessageFlowQualifier)
         )
     } bind AgentClientFactory::class
 

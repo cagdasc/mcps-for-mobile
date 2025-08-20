@@ -163,6 +163,61 @@ class AndroidDeviceController(
         "Scroll"
     }
 
+    override suspend fun enableAccessibilityService(serial: String?): Boolean = withContext(Dispatchers.IO) {
+        val device = getDevice(serial) ?: return@withContext false
+        val service = "com.cacaosd.interaction_engine/com.cacaosd.interaction_engine.service.InteractionTrackingService"
+        device.executeShellCommand(
+            "settings put secure enabled_accessibility_services $service",
+            CollectingReceiver()
+        )
+        delay(100)
+        val receiver = CollectingOutputReceiver()
+        device.executeShellCommand("settings get secure enabled_accessibility_services", receiver)
+
+        val result = receiver.output.trim()
+        return@withContext result.isNotEmpty() || result == service
+    }
+
+    override suspend fun disableAccessibilityService(serial: String?): Boolean = withContext(Dispatchers.IO) {
+        val device = getDevice(serial) ?: return@withContext false
+
+        val service = "com.cacaosd.interaction_engine/com.cacaosd.interaction_engine.service.InteractionTrackingService"
+
+        val cmd = """
+            U=$(cmd activity get-current-user)
+            CUR=$(settings get secure --user ${'$'}U enabled_accessibility_services | tr -d '\r')
+            NEW=""
+            for S in $(echo "${'$'}CUR" | tr ":" " "); do
+            [ "${'$'}S" != "$service" ] && NEW="${'$'}{NEW:+${'$'}NEW:}${'$'}S"
+            done
+            settings put secure --user ${'$'}U enabled_accessibility_services "${'$'}NEW"
+            if [ -z "${'$'}NEW" ] || [ "${'$'}NEW" = "null" ]; then
+              settings put secure --user ${'$'}U accessibility_enabled 0
+            fi
+            """.trimIndent()
+
+        device.executeShellCommand(cmd, CollectingReceiver())
+        delay(100)
+        val receiver = CollectingOutputReceiver()
+        device.executeShellCommand("settings get secure enabled_accessibility_services", receiver)
+
+        val result = receiver.output.trim()
+        return@withContext result.isEmpty()
+
+    }
+
+    override suspend fun sendData(serial: String?, values: Map<String, String>) {
+        val device = getDevice(serial) ?: error("Device not found")
+        val destination = "com.cacaosd.interaction_engine.INTERACTION_EVENT"
+        val parameters = buildString {
+            values.forEach {
+                append("--es ${it.key} ${it.value} ")
+            }
+        }
+
+        device.executeShellCommand("am broadcast -a $destination $parameters", CollectingReceiver())
+    }
+
     private val keyEventMap = mapOf(
         "home" to 3,
         "back" to 4,

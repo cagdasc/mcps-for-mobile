@@ -17,7 +17,7 @@ import java.util.*
 
 val utilityModule = module {
     single { EventMapper() }
-    single<MutableSharedFlow<McpMessage>>(qualifier = McpMessageFlowQualifier) { MutableSharedFlow() }
+    single<MutableSharedFlow<McpMessage>>(qualifier = AgentMessageFlowQualifier) { MutableSharedFlow() }
     single<Properties> { localProperties }
 }
 

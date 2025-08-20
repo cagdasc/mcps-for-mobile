@@ -23,6 +23,12 @@ interface DeviceController {
     suspend fun screenshot(serial: String?): String
 
     suspend fun swipe(startX: Int, startY: Int, endX: Int, endY: Int, durationMs: Long = 300, serial: String?): String
+
+    suspend fun enableAccessibilityService(serial: String?): Boolean
+
+    suspend fun disableAccessibilityService(serial: String?): Boolean
+
+    suspend fun sendData(serial: String?, values: Map<String, String>)
 }
 
 expect fun getAndroidDeviceController(appConfigManager: AppConfigManager): DeviceController

@@ -45,7 +45,13 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
         super.onServiceConnected()
         registerInteractionEngineInteractionReceiver()
 
-        Log.d(SERVICE_NAME, "InteractionTrackingService connected")
+        Log.i(SERVICE_NAME, "InteractionTrackingService is connected")
+    }
+
+    override fun onDestroy() {
+        unregisterReceiver(interactionReceiver)
+        Log.i(SERVICE_NAME, "InteractionTrackingService is destroyed")
+        super.onDestroy()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
@@ -78,7 +84,7 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
                     accessibilityEventFlow
                         .onStart {
                             eventFlowLock.set(false)
-                            Log.d(SERVICE_NAME, "Started recording accessibility events")
+                            Log.i(SERVICE_NAME, "Started recording accessibility events")
                         }
                         .map { accessibilityEvent ->
                             AccessibilityEventModel(
@@ -105,7 +111,7 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
 
                 InteractionEvent.StopRecording -> {
                     eventFlowLock.set(true)
-                    Log.d(SERVICE_NAME, "Stopped recording accessibility events")
+                    Log.i(SERVICE_NAME, "Stopped recording accessibility events")
                     val applicationPackage = interactionEventData.appPackage
                     saveStringToDownloads(
                         fileName = "${applicationPackage}_agent_events_${Clock.System.now().epochSeconds}.log",

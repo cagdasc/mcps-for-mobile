@@ -194,7 +194,7 @@ class ChatViewModel(
                     RAW_TEST_SCENARIO_TEMPLATE.format(userMessage).trimIndent()
                 } else {
                     EXPLICIT_TEST_SCENARIO_TEMPLATE.format(serial, packageName, userMessage).trimIndent()
-                }
+                } + RESULT_PREPARATION.trim()
                 mcpMessageFlow.emit(McpMessage.Request.User(message = scenario)).also {
                     agentClient.executePrompt(scenario)
                 }
@@ -223,10 +223,16 @@ class ChatViewModel(
             Device serial is %s
             The application package name that will be launched is %s
             The scenario to run: %s
-        """
+            """
 
         private const val RAW_TEST_SCENARIO_TEMPLATE = """
             The scenario to run: %s
-        """
+            """
+
+        private const val RESULT_PREPARATION = """
+            Once you done with the scenario, please:
+            Tell content-desc value of views that you clicked.
+            {VIEW_CLASS} - {CONTENT_DESC} - {X_COORDINATE}x{Y_COORDINATE}
+            """
     }
 }

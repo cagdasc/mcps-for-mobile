@@ -14,7 +14,7 @@ internal object MetaAgentQualifier : SelfResolveQualifier()
 
 internal object CustomAgentQualifier : SelfResolveQualifier()
 
-internal object McpMessageFlowQualifier : SelfResolveQualifier()
+internal object AgentMessageFlowQualifier : SelfResolveQualifier()
 
 internal object AndroidDeviceControllerQualifier : SelfResolveQualifier()
 

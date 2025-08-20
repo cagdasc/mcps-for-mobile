@@ -36,7 +36,7 @@ class DefaultAgentClientFactory(
             .withTools(toolRegistry)
             .withStrategy(aiAgentStrategy)
             .withFeatures {
-                installEventHandler(eventMapper = eventMapper, mcpMessageFlow = agentEventFlow)
+                installEventHandler()
                 installSimpleRegexTokenizer()
             }
         return DefaultAgentClient(builder)
@@ -50,13 +50,11 @@ class DefaultAgentClientFactory(
             .withTools(toolRegistry)
             .withStrategy(aiAgentStrategy)
             .withFeatures {
-                installEventHandler(eventMapper = eventMapper, mcpMessageFlow = agentEventFlow)
+                installEventHandler()
                 installSimpleRegexTokenizer()
             }
         return DefaultAgentClient(builder)
     }
-
-    //scroll and find "Android Dev Summit" item and click like button
 
     override fun createCustomModel(modelName: String): AgentClient {
         val ollamaClient = OllamaClient()
@@ -71,7 +69,7 @@ class DefaultAgentClientFactory(
             .withTools(toolRegistry)
             .withStrategy(aiAgentStrategy)
             .withFeatures {
-                installEventHandler(eventMapper = eventMapper, mcpMessageFlow = agentEventFlow)
+                installEventHandler()
                 installSimpleRegexTokenizer()
             }
         return DefaultAgentClient(builder)
@@ -83,24 +81,29 @@ class DefaultAgentClientFactory(
         }
     }
 
-    private fun AIAgent.FeatureContext.installEventHandler(
-        eventMapper: EventMapper,
-        mcpMessageFlow: MutableSharedFlow<McpMessage>
-    ) {
+    private fun AIAgent.FeatureContext.installEventHandler() {
         install(EventHandler) {
+            onBeforeAgentStarted {
+                println("Agent is starting...")
+            }
+
+            onAgentFinished {
+                println("Agent has finished execution.")
+            }
+
             onAfterLLMCall { context ->
                 val responses = context.responses
                 val mcpMessages = responses.map { response ->
                     eventMapper.mapToMcpMessages(response)
                 }.flatten()
 
-                mcpMessageFlow.emitAll(mcpMessages.asFlow())
+                agentEventFlow.emitAll(mcpMessages.asFlow())
             }
 
             onAgentRunError { context ->
                 val strategyName = context.runId
                 val throwable = context.throwable
-                mcpMessageFlow.emit(
+                agentEventFlow.emit(
                     McpMessage.Response.AssistantWithError(
                         strategyName = strategyName,
                         throwable = throwable

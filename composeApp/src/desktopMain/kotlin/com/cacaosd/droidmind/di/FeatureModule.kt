@@ -12,7 +12,7 @@ val featureModule = module {
         val googleAgentClient: AgentClient = get(GoogleAgentQualifier)
 
         val mcpMessageFlow: MutableSharedFlow<McpMessage> =
-            get<MutableSharedFlow<McpMessage>>(McpMessageFlowQualifier)
+            get<MutableSharedFlow<McpMessage>>(AgentMessageFlowQualifier)
 
         ChatViewModel(
             agentClient = googleAgentClient,
