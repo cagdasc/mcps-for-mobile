@@ -43,9 +43,9 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
 
     override fun onServiceConnected() {
         super.onServiceConnected()
-        registerInteractionEngineInteractionReceiver()
-
         Log.i(SERVICE_NAME, "InteractionTrackingService is connected")
+
+        registerInteractionEngineInteractionReceiver()
     }
 
     override fun onDestroy() {
@@ -86,24 +86,7 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
                             eventFlowLock.set(false)
                             Log.i(SERVICE_NAME, "Started recording accessibility events")
                         }
-                        .map { accessibilityEvent ->
-                            AccessibilityEventModel(
-                                timestamp = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
-                                eventType = eventTypeToText(accessibilityEvent.eventType),
-                                applicationPackage = accessibilityEvent.packageName?.toString(),
-                                viewClass = accessibilityEvent.className?.toString(),
-                                text = accessibilityEvent.text.joinToString(separator = " ") { it.toString() },
-                                source = AccessibilityEventModel.Source(
-                                    id = accessibilityEvent.source?.viewIdResourceName,
-                                    contentDescription = accessibilityEvent.source?.contentDescription?.toString(),
-                                    isEnabled = accessibilityEvent.source?.isEnabled ?: false,
-                                    classname = accessibilityEvent.source?.className.toString(),
-                                    text = accessibilityEvent.source?.text.toString()
-                                ),
-                                windowChanges = windowChangeToText(accessibilityEvent.windowChanges),
-                                contentChangeType = contentChangeTypeToString(accessibilityEvent.contentChangeTypes)
-                            )
-                        }
+                        .map(::mapAccessibilityEvent)
                         .filter { it.applicationPackage == null || it.applicationPackage == interactionEventData.appPackage }
                         .onEach(eventCollection::add)
                         .launchIn(lifecycleScope)
@@ -122,6 +105,24 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
             }
         }
     }
+
+    fun mapAccessibilityEvent(accessibilityEvent: AccessibilityEvent): AccessibilityEventModel =
+        AccessibilityEventModel(
+            timestamp = Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault()),
+            eventType = eventTypeToText(accessibilityEvent.eventType),
+            applicationPackage = accessibilityEvent.packageName?.toString(),
+            viewClass = accessibilityEvent.className?.toString(),
+            text = accessibilityEvent.text.joinToString(separator = " ") { it.toString() },
+            source = AccessibilityEventModel.Source(
+                id = accessibilityEvent.source?.viewIdResourceName,
+                contentDescription = accessibilityEvent.source?.contentDescription?.toString(),
+                isEnabled = accessibilityEvent.source?.isEnabled ?: false,
+                classname = accessibilityEvent.source?.className.toString(),
+                text = accessibilityEvent.source?.text.toString()
+            ),
+            windowChanges = windowChangeToText(accessibilityEvent.windowChanges),
+            contentChangeType = contentChangeTypeToString(accessibilityEvent.contentChangeTypes)
+        )
 
     companion object {
         const val SERVICE_NAME = "InteractionTrackingService"

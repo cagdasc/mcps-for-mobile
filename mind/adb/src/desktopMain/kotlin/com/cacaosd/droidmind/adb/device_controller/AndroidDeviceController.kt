@@ -168,7 +168,7 @@ class AndroidDeviceController(
         val service = "com.cacaosd.interaction_engine/com.cacaosd.interaction_engine.service.InteractionTrackingService"
         device.executeShellCommand(
             "settings put secure enabled_accessibility_services $service",
-            CollectingReceiver()
+            CollectingOutputReceiver()
         )
         delay(100)
         val receiver = CollectingOutputReceiver()
@@ -196,7 +196,7 @@ class AndroidDeviceController(
             fi
             """.trimIndent()
 
-        device.executeShellCommand(cmd, CollectingReceiver())
+        device.executeShellCommand(cmd, CollectingOutputReceiver())
         delay(100)
         val receiver = CollectingOutputReceiver()
         device.executeShellCommand("settings get secure enabled_accessibility_services", receiver)
