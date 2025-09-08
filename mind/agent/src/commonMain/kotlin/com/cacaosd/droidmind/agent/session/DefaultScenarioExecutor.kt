@@ -1,8 +1,8 @@
-package com.cacaosd.mcp.agent.session
+package com.cacaosd.droidmind.agent.session
 
-import com.cacaosd.mcp.adb.device_controller.DeviceController
-import com.cacaosd.mcp.domain.AgentClient
-import com.cacaosd.mcp.domain.session.ScenarioExecutor
+import com.cacaosd.droidmind.adb.device_controller.DeviceController
+import com.cacaosd.droidmind.domain.AgentClient
+import com.cacaosd.droidmind.domain.session.ScenarioExecutor
 
 class DefaultScenarioExecutor(private val agentClient: AgentClient, private val deviceController: DeviceController) :
     ScenarioExecutor {

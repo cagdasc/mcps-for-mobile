@@ -6,10 +6,10 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
-import mcpsformobile.ui.theme.generated.resources.Res
-import mcpsformobile.ui.theme.generated.resources.roboto_bold
-import mcpsformobile.ui.theme.generated.resources.roboto_medium
-import mcpsformobile.ui.theme.generated.resources.roboto_regular
+import droidmind.ui.theme.generated.resources.Res
+import droidmind.ui.theme.generated.resources.roboto_bold
+import droidmind.ui.theme.generated.resources.roboto_medium
+import droidmind.ui.theme.generated.resources.roboto_regular
 import org.jetbrains.compose.resources.Font
 
 // Extended Typography Object
