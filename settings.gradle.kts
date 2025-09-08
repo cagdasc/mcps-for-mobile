@@ -1,4 +1,4 @@
-rootProject.name = "MCPsForMobile"
+rootProject.name = "DroidMind"
 enableFeaturePreview("TYPESAFE_PROJECT_ACCESSORS")
 
 pluginManagement {
@@ -35,7 +35,7 @@ plugins {
 include(":composeApp")
 include(":feature:chat")
 include(":ui:theme")
-include(":mcp:adb")
-include(":mcp:agent")
-include(":mcp:domain")
+include(":mind:adb")
+include(":mind:agent")
+include(":mind:domain")
 include(":shared")
