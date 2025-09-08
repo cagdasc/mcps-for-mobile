@@ -1,7 +1,7 @@
-MCPs for Mobile
-===============
+DroidMind
+=========
 
-MCPs for Mobile is a Kotlin project that enables control of Android devices or emulators through an AI agent. The agent
+DroidMind is a Kotlin project that enables control of Android devices or emulators through an AI agent. The agent
 processes natural language commands and performs corresponding actions on connected Android devices—such as listing
 installed apps, launching applications, and interacting with UI elements. It supports integration with local or cloud
 based language models.
@@ -53,6 +53,7 @@ Roadmap
 - Add more ADB-based tools
 - Improve error handling for device communication
 - Refine layout structures for better LLM understanding
+- Add a verification engine to confirm action outcomes
 - Investigate migration from ddmlib to adblib
 
 License

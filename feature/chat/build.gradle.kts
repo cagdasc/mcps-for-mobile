@@ -12,9 +12,9 @@ kotlin {
         val desktopMain by getting
 
         commonMain.dependencies {
-            implementation(project(":mcp:adb"))
-            implementation(project(":mcp:agent"))
-            implementation(project(":mcp:domain"))
+            implementation(project(":mind:adb"))
+            implementation(project(":mind:agent"))
+            implementation(project(":mind:domain"))
             implementation(project(":ui:theme"))
 
             implementation(compose.runtime)

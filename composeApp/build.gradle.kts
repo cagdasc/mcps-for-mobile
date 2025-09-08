@@ -16,9 +16,9 @@ kotlin {
         commonMain.dependencies {
             implementation(project(":feature:chat"))
             implementation(project(":ui:theme"))
-            implementation(project(":mcp:adb"))
-            implementation(project(":mcp:agent"))
-            implementation(project(":mcp:domain"))
+            implementation(project(":mind:adb"))
+            implementation(project(":mind:agent"))
+            implementation(project(":mind:domain"))
 
             implementation(libs.ai.koog)
 
@@ -40,11 +40,11 @@ kotlin {
 
 compose.desktop {
     application {
-        mainClass = "com.cacaosd.mcps_for_mobile.MainKt"
+        mainClass = "com.cacaosd.droidmind.MainKt"
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "com.cacaosd.mcps_for_mobile"
+            packageName = "com.cacaosd.droidmind"
             packageVersion = "1.0.0"
         }
     }
