@@ -92,9 +92,32 @@ class AndroidDeviceController(
         device.pullFile(remotePath, localDumpFile.absolutePath)
         device.executeShellCommand("rm $remotePath", CollectingReceiver())
 
-        // TODO: Return structured format
         layoutOptimiser.optimise(localDumpFile).toString()
     }
+
+//    override suspend fun getUiDump(serial: String?): String = withContext(Dispatchers.IO) {
+//        val device = getDevice(serial) ?: return@withContext "Device not found"
+//
+//        val timestamp = Clock.System.now().epochSeconds
+//        val xmlName = "uidump_$timestamp.xml"
+//        val remotePath = "/sdcard/Download/$xmlName"
+//
+//        sendData(
+//            device.serialNumber,
+//            mapOf(
+//                "INTERACTION_EVENT" to "dump_ui_hierarchy",
+//                "APP_PACKAGE" to "com.cacaosd.droidmind",
+//                "FILENAME" to remotePath
+//            )
+//        )
+//        delay(1000) // Wait for the dump to be created
+//
+//        val localDumpFile = appConfigManager.getUiDumpFile(filename = xmlName).toFile()
+//        device.pullFile(remotePath, localDumpFile.absolutePath)
+//        device.executeShellCommand("rm $remotePath", CollectingReceiver())
+//
+//        layoutOptimiser.optimise(localDumpFile).toString()
+//    }
 
     override suspend fun inputText(text: String, serial: String?): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
@@ -163,6 +186,7 @@ class AndroidDeviceController(
         "Scroll"
     }
 
+    // TODO: Functions below need refactoring
     override suspend fun enableAccessibilityService(serial: String?): Boolean = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext false
         val service = "com.cacaosd.interaction_engine/com.cacaosd.interaction_engine.service.InteractionTrackingService"

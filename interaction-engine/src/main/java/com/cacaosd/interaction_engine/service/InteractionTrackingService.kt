@@ -6,6 +6,7 @@ import android.os.Build
 import android.util.Log
 import android.view.accessibility.AccessibilityEvent
 import androidx.lifecycle.lifecycleScope
+import com.cacaosd.interaction_engine.UiHierarchyDumper
 import com.cacaosd.interaction_engine.model.AccessibilityEventModel
 import com.cacaosd.interaction_engine.model.contentChangeTypeToString
 import com.cacaosd.interaction_engine.model.eventTypeToText
@@ -37,6 +38,7 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
     private val interactionReceiver = InteractionReceiver().apply {
         addListener(interactionListener())
     }
+    private val uiHierarchyDumper = UiHierarchyDumper()
 
     private val accessibilityEventFlow = MutableSharedFlow<AccessibilityEvent>()
     private val eventCollection = mutableListOf<AccessibilityEventModel>()
@@ -79,6 +81,10 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
 
     private fun interactionListener() = object : InteractionListener {
         override fun onInteraction(interactionEventData: InteractionEventData) {
+            Log.d(
+                SERVICE_NAME,
+                "Received interaction event: ${interactionEventData.interactionEvent} for app ${interactionEventData.appPackage}"
+            )
             when (interactionEventData.interactionEvent) {
                 InteractionEvent.StartRecording -> {
                     accessibilityEventFlow
@@ -101,6 +107,14 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
                         content = json.encodeToString(eventCollection)
                     )
                     eventCollection.clear()
+                }
+
+                InteractionEvent.DumpUiHierarchy -> {
+                    uiHierarchyDumper.dump(
+                        rootInActiveWindow,
+                        this@InteractionTrackingService,
+                        interactionEventData.fileName!!
+                    )
                 }
             }
         }
