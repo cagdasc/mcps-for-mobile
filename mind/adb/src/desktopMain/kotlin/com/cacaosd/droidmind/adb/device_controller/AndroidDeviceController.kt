@@ -14,17 +14,19 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 
-actual fun getAndroidDeviceController(appConfigManager: AppConfigManager): DeviceController =
+actual fun getAndroidDeviceController(appConfigManager: AppConfigManager, clock: Clock): DeviceController =
     AndroidDeviceController(
         adb = getAdb(),
         layoutOptimiser = getLayoutOptimiser(),
-        appConfigManager = appConfigManager
+        appConfigManager = appConfigManager,
+        clock = clock
     )
 
 class AndroidDeviceController(
     private val adb: AndroidDebugBridge,
     private val layoutOptimiser: LayoutOptimiser,
-    private val appConfigManager: AppConfigManager
+    private val appConfigManager: AppConfigManager,
+    private val clock: Clock
 ) : DeviceController {
 
     override suspend fun getDevices(): List<DeviceInfo> {
@@ -79,14 +81,38 @@ class AndroidDeviceController(
         "Launched $packageName"
     }
 
-    override suspend fun getUiDump(serial: String?): String = withContext(Dispatchers.IO) {
+//    override suspend fun getUiDump(serial: String?): String = withContext(Dispatchers.IO) {
+//        val device = getDevice(serial) ?: return@withContext "Device not found"
+//
+//        val timestamp = Clock.System.now().epochSeconds
+//        val xmlName = "uidump_$timestamp.xml"
+//        val remotePath = "/sdcard/$xmlName"
+//
+//        device.executeShellCommand("uiautomator dump $remotePath", CollectingReceiver())
+//
+//        val localDumpFile = appConfigManager.getUiDumpFile(filename = xmlName).toFile()
+//        device.pullFile(remotePath, localDumpFile.absolutePath)
+////        device.executeShellCommand("rm $remotePath", CollectingReceiver())
+//
+//        layoutOptimiser.optimise(localDumpFile).toString()
+//    }
+
+    override suspend fun getUiDump(packageName: String, serial: String?): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
 
-        val timestamp = Clock.System.now().epochSeconds
-        val xmlName = "uidump_$timestamp.xml"
-        val remotePath = "/sdcard/$xmlName"
+        val timestamp = clock.now().epochSeconds
+        val xmlName = "uidump_${packageName}_$timestamp.xml"
+        val remotePath = "/sdcard/Download/$xmlName"
 
-        device.executeShellCommand("uiautomator dump $remotePath", CollectingReceiver())
+        sendData(
+            device.serialNumber,
+            mapOf(
+                "INTERACTION_EVENT" to "dump_ui_hierarchy",
+                "APP_PACKAGE" to packageName,
+                "FILENAME" to xmlName
+            )
+        )
+        delay(250) // Wait for the dump to be created
 
         val localDumpFile = appConfigManager.getUiDumpFile(filename = xmlName).toFile()
         device.pullFile(remotePath, localDumpFile.absolutePath)
@@ -94,30 +120,6 @@ class AndroidDeviceController(
 
         layoutOptimiser.optimise(localDumpFile).toString()
     }
-
-//    override suspend fun getUiDump(serial: String?): String = withContext(Dispatchers.IO) {
-//        val device = getDevice(serial) ?: return@withContext "Device not found"
-//
-//        val timestamp = Clock.System.now().epochSeconds
-//        val xmlName = "uidump_$timestamp.xml"
-//        val remotePath = "/sdcard/Download/$xmlName"
-//
-//        sendData(
-//            device.serialNumber,
-//            mapOf(
-//                "INTERACTION_EVENT" to "dump_ui_hierarchy",
-//                "APP_PACKAGE" to "com.cacaosd.droidmind",
-//                "FILENAME" to remotePath
-//            )
-//        )
-//        delay(1000) // Wait for the dump to be created
-//
-//        val localDumpFile = appConfigManager.getUiDumpFile(filename = xmlName).toFile()
-//        device.pullFile(remotePath, localDumpFile.absolutePath)
-//        device.executeShellCommand("rm $remotePath", CollectingReceiver())
-//
-//        layoutOptimiser.optimise(localDumpFile).toString()
-//    }
 
     override suspend fun inputText(text: String, serial: String?): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
@@ -156,7 +158,7 @@ class AndroidDeviceController(
     override suspend fun screenshot(serial: String?): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
         val screenshotsPath = appConfigManager.screenshotsDir.toAbsolutePath().toString()
-        val timestamp = Clock.System.now().epochSeconds
+        val timestamp = clock.now().epochSeconds
 
         device.executeShellCommand(
             "screencap -p /sdcard/Pictures/${timestamp}.png",

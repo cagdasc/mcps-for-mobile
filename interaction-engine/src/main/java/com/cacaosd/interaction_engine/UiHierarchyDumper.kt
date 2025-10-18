@@ -11,6 +11,7 @@ class UiHierarchyDumper {
 
     fun dump(
         root: AccessibilityNodeInfo,
+        rotation: Int,
         context: Context,
         fileName: String
     ) {
@@ -20,6 +21,7 @@ class UiHierarchyDumper {
             serializer.setOutput(it, "UTF-8")
             serializer.startDocument("UTF-8", true)
             serializer.startTag("", "hierarchy")
+            serializer.attribute("", "rotation", rotation.toString())
 
             dumpNodeRecursive(serializer, root, 0)
 
@@ -38,7 +40,7 @@ class UiHierarchyDumper {
         serializer.startTag("", "node")
 
         val rect = android.graphics.Rect()
-        node.getBoundsInScreen(rect)
+        node.getBoundsInWindow(rect)
 
         // Collect attributes similar to uiautomator dump
         serializer.attribute("", "index", index.toString())

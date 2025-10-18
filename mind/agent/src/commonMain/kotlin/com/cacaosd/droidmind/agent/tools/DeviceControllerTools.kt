@@ -32,9 +32,10 @@ class DeviceControllerTools(private val deviceController: DeviceController) : To
         serial = serial
     )
 
-    @Tool("get_ui_dump")
-    @LLMDescription("Retrieves the current UI hierarchy (in XML) from the Android device.")
-    suspend fun getUiDump(serial: String?): String = deviceController.getUiDump(serial = serial)
+    @Tool("ui_dump")
+    @LLMDescription("Retrieves the current UI hierarchy (in XML) from the Android device with coordinates by passing package name.")
+    suspend fun uiDump(packageName: String, serial: String?): String =
+        deviceController.getUiDump(packageName = packageName, serial = serial)
 
     @Tool("input_text")
     @LLMDescription("Types and sends text input to the Android device using the ADB shell input command.")

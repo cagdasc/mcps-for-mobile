@@ -1,6 +1,7 @@
 package com.cacaosd.droidmind.adb.device_controller
 
 import com.cacaosd.droidmind.adb.AppConfigManager
+import kotlinx.datetime.Clock
 
 interface DeviceController {
 
@@ -10,7 +11,7 @@ interface DeviceController {
 
     suspend fun launchApp(packageName: String, serial: String?): String
 
-    suspend fun getUiDump(serial: String?): String
+    suspend fun getUiDump(packageName: String,serial: String?): String
 
     suspend fun inputText(text: String, serial: String?): String
 
@@ -31,4 +32,4 @@ interface DeviceController {
     suspend fun sendData(serial: String?, values: Map<String, String>)
 }
 
-expect fun getAndroidDeviceController(appConfigManager: AppConfigManager): DeviceController
+expect fun getAndroidDeviceController(appConfigManager: AppConfigManager, clock: Clock): DeviceController

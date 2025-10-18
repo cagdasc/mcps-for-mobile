@@ -112,6 +112,7 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
                 InteractionEvent.DumpUiHierarchy -> {
                     uiHierarchyDumper.dump(
                         rootInActiveWindow,
+                        getScreenRotation(),
                         this@InteractionTrackingService,
                         interactionEventData.fileName!!
                     )
@@ -137,6 +138,22 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
             windowChanges = windowChangeToText(accessibilityEvent.windowChanges),
             contentChangeType = contentChangeTypeToString(accessibilityEvent.contentChangeTypes)
         )
+
+    @Suppress("DEPRECATION")
+    private fun getScreenRotation(): Int {
+        return try {
+            if (Build.VERSION.SDK_INT >= 30) {
+                // API 30+: AccessibilityService.display is available
+                display?.rotation ?: 0
+            } else {
+                // Older APIs: use WindowManager
+                val wm = getSystemService(WINDOW_SERVICE) as android.view.WindowManager
+                wm.defaultDisplay.rotation
+            }
+        } catch (e: Exception) {
+            0
+        }
+    }
 
     companion object {
         const val SERVICE_NAME = "InteractionTrackingService"

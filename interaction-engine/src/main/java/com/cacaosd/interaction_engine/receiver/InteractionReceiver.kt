@@ -10,6 +10,8 @@ import kotlinx.serialization.Serializable
  * `adb shell am broadcast -a com.cacaosd.interaction_engine.INTERACTION_EVENT --es "INTERACTION_EVENT" "start_recording" --es "APP_PACKAGE" "com.google.android.youtube"`
  * For stop recording:
  * `adb shell am broadcast -a com.cacaosd.interaction_engine.INTERACTION_EVENT --es "INTERACTION_EVENT" "stop_recording" --es "APP_PACKAGE" "com.google.android.youtube"`
+ * For dump ui hierarchy:
+ * `adb shell am broadcast -a com.cacaosd.interaction_engine.INTERACTION_EVENT --es "INTERACTION_EVENT" "dump_ui_hierarchy" --es "APP_PACKAGE" "com.google.android.youtube" --es "FILENAME" caca.xml`
  */
 class InteractionReceiver : BroadcastReceiver() {
 
