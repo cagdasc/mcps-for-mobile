@@ -30,6 +30,7 @@ android {
     }
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_21.toString()
+        freeCompilerArgs += "-Xopt-in=kotlin.time.ExperimentalTime"
     }
 }
 
@@ -37,5 +38,5 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.datetime)
     implementation(libs.kotlinx.serialization.json)
-    implementation("androidx.lifecycle:lifecycle-service:2.9.2")
+    implementation(libs.androidx.lifecycle.service)
 }

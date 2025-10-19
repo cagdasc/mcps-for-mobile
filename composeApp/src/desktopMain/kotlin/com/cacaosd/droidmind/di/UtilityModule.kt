@@ -11,10 +11,10 @@ import com.cacaosd.droidmind.agent.tools.DeviceControllerTools
 import com.cacaosd.droidmind.domain.McpMessage
 import com.cacaosd.droidmind.localProperties
 import kotlinx.coroutines.flow.MutableSharedFlow
-import kotlinx.datetime.Clock
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import java.util.*
+import kotlin.time.Clock
 
 val utilityModule = module {
     single { EventMapper() }

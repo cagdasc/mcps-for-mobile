@@ -19,11 +19,11 @@ import com.cacaosd.interaction_engine.util.json
 import com.cacaosd.interaction_engine.util.saveStringToDownloads
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.datetime.Clock
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.time.Clock
 
 /**
  * Accessibility-based tracking service.
@@ -66,9 +66,7 @@ class InteractionTrackingService : LifecycleAccessibilityService() {
         Log.d(SERVICE_NAME, "Logging event ${event.eventType} from package ${event.packageName}")
     }
 
-    override fun onInterrupt() {
-        // no-op
-    }
+    override fun onInterrupt() = Unit
 
     private fun registerInteractionEngineInteractionReceiver() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {

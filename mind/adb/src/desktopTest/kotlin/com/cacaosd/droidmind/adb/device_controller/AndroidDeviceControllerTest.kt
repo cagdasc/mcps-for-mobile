@@ -4,6 +4,7 @@ import com.cacaosd.droidmind.adb.AppConfigManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
+import kotlin.time.Clock
 import kotlin.time.Duration.Companion.seconds
 
 class AndroidDeviceControllerTest {
@@ -11,8 +12,10 @@ class AndroidDeviceControllerTest {
     private val androidDeviceController = getAndroidDeviceController(
         AppConfigManager(
             appName = "mcpformobile",
-            appVersion = "0.0.1"
-        )
+            appVersion = "0.0.1",
+            packageName = "com.cacaosd.droidmind",
+        ),
+        clock = Clock.System
     ) as AndroidDeviceController
 
     @Test

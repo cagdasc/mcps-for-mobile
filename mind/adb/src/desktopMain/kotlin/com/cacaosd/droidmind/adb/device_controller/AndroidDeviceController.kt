@@ -12,7 +12,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
-import kotlinx.datetime.Clock
+import kotlin.time.Clock
 
 actual fun getAndroidDeviceController(appConfigManager: AppConfigManager, clock: Clock): DeviceController =
     AndroidDeviceController(
@@ -21,6 +21,15 @@ actual fun getAndroidDeviceController(appConfigManager: AppConfigManager, clock:
         appConfigManager = appConfigManager,
         clock = clock
     )
+
+internal suspend fun IDevice.executeShellCommandWithDelay(
+    command: String,
+    receiver: com.android.ddmlib.IShellOutputReceiver,
+    delayInMillis: Long = 2000L
+) {
+    this.executeShellCommand(command, receiver)
+    delay(delayInMillis)
+}
 
 class AndroidDeviceController(
     private val adb: AndroidDebugBridge,
@@ -77,25 +86,9 @@ class AndroidDeviceController(
         val device = getDevice(serial) ?: return@withContext "Device not found"
         val cmd = "monkey -p $packageName -c android.intent.category.LAUNCHER 1"
         val receiver = CollectingReceiver()
-        device.executeShellCommand(cmd, receiver)
+        device.executeShellCommandWithDelay(cmd, receiver)
         "Launched $packageName"
     }
-
-//    override suspend fun getUiDump(serial: String?): String = withContext(Dispatchers.IO) {
-//        val device = getDevice(serial) ?: return@withContext "Device not found"
-//
-//        val timestamp = Clock.System.now().epochSeconds
-//        val xmlName = "uidump_$timestamp.xml"
-//        val remotePath = "/sdcard/$xmlName"
-//
-//        device.executeShellCommand("uiautomator dump $remotePath", CollectingReceiver())
-//
-//        val localDumpFile = appConfigManager.getUiDumpFile(filename = xmlName).toFile()
-//        device.pullFile(remotePath, localDumpFile.absolutePath)
-////        device.executeShellCommand("rm $remotePath", CollectingReceiver())
-//
-//        layoutOptimiser.optimise(localDumpFile).toString()
-//    }
 
     override suspend fun getUiDump(packageName: String, serial: String?): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
@@ -124,20 +117,20 @@ class AndroidDeviceController(
     override suspend fun inputText(text: String, serial: String?): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
         val cmd = "input text '${text.replace(" ", "%s")}'"
-        device.executeShellCommand(cmd, CollectingReceiver())
+        device.executeShellCommandWithDelay(cmd, CollectingReceiver())
         "Input sent: $text"
     }
 
     override suspend fun tap(x: Int, y: Int, serial: String?): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
-        device.executeShellCommand("input tap $x $y", CollectingReceiver())
+        device.executeShellCommandWithDelay("input tap $x $y", CollectingReceiver())
         "Tapped at ($x, $y)"
     }
 
     override suspend fun sendKeyEvent(key: String, serial: String?): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
         val keyCode = keyEventMap[key.lowercase()] ?: return@withContext "Unsupported key: $key"
-        device.executeShellCommand("input keyevent $keyCode", CollectingReceiver())
+        device.executeShellCommandWithDelay("input keyevent $keyCode", CollectingReceiver())
         "Sent key event: $key"
     }
 
@@ -184,7 +177,7 @@ class AndroidDeviceController(
         serial: String?
     ): String = withContext(Dispatchers.IO) {
         val device = getDevice(serial) ?: return@withContext "Device not found"
-        device.executeShellCommand("input swipe $startX $startY $endX $endY $durationMs", CollectingReceiver())
+        device.executeShellCommandWithDelay("input swipe $startX $startY $endX $endY $durationMs", CollectingReceiver())
         "Scroll"
     }
 
