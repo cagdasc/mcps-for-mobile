@@ -2,8 +2,8 @@
 
 package com.cacaosd.droidmind.agent.client
 
-import ai.koog.agents.core.agent.AIAgent
-import ai.koog.agents.core.agent.entity.AIAgentStrategy
+import ai.koog.agents.core.agent.GraphAIAgent
+import ai.koog.agents.core.agent.entity.AIAgentGraphStrategy
 import ai.koog.agents.core.tools.ToolRegistry
 import ai.koog.agents.features.eventHandler.feature.EventHandler
 import ai.koog.agents.features.tokenizer.feature.MessageTokenizer
@@ -23,7 +23,7 @@ import kotlin.uuid.ExperimentalUuidApi
 
 class DefaultAgentClientFactory(
     private val toolRegistry: ToolRegistry,
-    private val aiAgentStrategy: AIAgentStrategy<String, String>,
+    private val aiAgentStrategy: AIAgentGraphStrategy<String, String>,
     private val eventMapper: EventMapper,
     private val agentEventFlow: MutableSharedFlow<McpMessage>
 ) :
@@ -75,23 +75,23 @@ class DefaultAgentClientFactory(
         return DefaultAgentClient(builder)
     }
 
-    private fun AIAgent.FeatureContext.installSimpleRegexTokenizer() {
+    private fun GraphAIAgent.FeatureContext.installSimpleRegexTokenizer() {
         install(MessageTokenizer) {
             tokenizer = SimpleRegexBasedTokenizer()
         }
     }
 
-    private fun AIAgent.FeatureContext.installEventHandler() {
+    private fun GraphAIAgent.FeatureContext.installEventHandler() {
         install(EventHandler) {
-            onBeforeAgentStarted {
+            onAgentStarting {
                 println("Agent is starting...")
             }
 
-            onAgentFinished {
+            onAgentCompleted {
                 println("Agent has finished execution.")
             }
 
-            onAfterLLMCall { context ->
+            onLLMCallCompleted { context ->
                 val responses = context.responses
                 val mcpMessages = responses.map { response ->
                     eventMapper.mapToMcpMessages(response)
@@ -100,7 +100,7 @@ class DefaultAgentClientFactory(
                 agentEventFlow.emitAll(mcpMessages.asFlow())
             }
 
-            onAgentRunError { context ->
+            onAgentExecutionFailed { context ->
                 val strategyName = context.runId
                 val throwable = context.throwable
                 agentEventFlow.emit(
@@ -111,7 +111,7 @@ class DefaultAgentClientFactory(
                 )
             }
 
-            onToolCallResult { context ->
+            onToolCallCompleted { context ->
                 // TODO: Handle tool call result if needed
             }
         }

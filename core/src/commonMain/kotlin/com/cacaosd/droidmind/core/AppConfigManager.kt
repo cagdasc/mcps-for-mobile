@@ -1,11 +1,11 @@
-package com.cacaosd.droidmind.adb
+package com.cacaosd.droidmind.core
 
-import kotlinx.datetime.Clock
-import kotlinx.datetime.TimeZone
-import kotlinx.datetime.toLocalDateTime
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.time.Clock
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.util.logging.Logger
 
 /**
@@ -15,7 +15,8 @@ import java.util.logging.Logger
 class AppConfigManager(
     private val appName: String,
     private val appVersion: String = "1.0",
-    private val packageName: String
+    private val packageName: String,
+    private val clock: Clock
 ) {
     private val logger = Logger.getLogger(AppConfigManager::class.java.name)
 
@@ -108,11 +109,13 @@ class AppConfigManager(
      */
     private fun createDefaultConfigFiles() {
         // Main configuration file
+        val createdAt = LocalDateTime.now(clock)
+        val dateTimeText = createdAt.format(DateTimeFormatter.ISO_DATE_TIME)
         if (!Files.exists(mainConfigFile)) {
             val defaultConfig = """
                 # $appName Configuration File
                 # Version: $appVersion
-                # Created: ${Clock.System.now().toLocalDateTime(TimeZone.currentSystemDefault())}
+                # Created: $dateTimeText
                 
                 app.name=${appName}
                 app.version=${appVersion}
