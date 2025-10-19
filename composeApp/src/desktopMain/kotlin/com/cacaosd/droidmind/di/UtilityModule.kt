@@ -14,16 +14,23 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import java.util.*
+import kotlin.time.Clock
 
 val utilityModule = module {
     single { EventMapper() }
-    single<MutableSharedFlow<McpMessage>>(qualifier = McpMessageFlowQualifier) { MutableSharedFlow() }
+    single<MutableSharedFlow<McpMessage>>(qualifier = AgentMessageFlowQualifier) { MutableSharedFlow() }
     single<Properties> { localProperties }
+    single<Clock> { Clock.System }
 }
 
 val toolsModule = module {
-    single { AppConfigManager(appName = "mcpformobile", appVersion = "0.0.1") }
-    single(AndroidDeviceControllerQualifier) { getAndroidDeviceController(appConfigManager = get()) } bind DeviceController::class
+    single { AppConfigManager(appName = "droidmind", appVersion = "0.0.1", packageName = "com.cacaosd.droidmind") }
+    single(AndroidDeviceControllerQualifier) {
+        getAndroidDeviceController(
+            appConfigManager = get(),
+            clock = get()
+        )
+    } bind DeviceController::class
     single { DeviceControllerTools(get(AndroidDeviceControllerQualifier)) }
 
     single<ToolRegistry> {

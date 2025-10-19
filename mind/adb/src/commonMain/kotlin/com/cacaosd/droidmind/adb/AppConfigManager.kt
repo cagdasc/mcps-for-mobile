@@ -14,7 +14,8 @@ import java.util.logging.Logger
  */
 class AppConfigManager(
     private val appName: String,
-    private val appVersion: String = "1.0"
+    private val appVersion: String = "1.0",
+    private val packageName: String
 ) {
     private val logger = Logger.getLogger(AppConfigManager::class.java.name)
 
@@ -223,6 +224,7 @@ class AppConfigManager(
         return AppInfo(
             name = appName,
             version = appVersion,
+            packageName = packageName,
             configDir = configDir.toAbsolutePath().toString(),
             isFirstRun = isFirstRun()
         )
@@ -252,6 +254,7 @@ enum class OS {
 data class AppInfo(
     val name: String,
     val version: String,
+    val packageName: String,
     val configDir: String,
     val isFirstRun: Boolean
 )

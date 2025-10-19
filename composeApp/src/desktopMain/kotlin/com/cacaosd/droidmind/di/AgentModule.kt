@@ -3,7 +3,9 @@
 package com.cacaosd.droidmind.di
 
 import com.cacaosd.droidmind.agent.client.DefaultAgentClientFactory
+import com.cacaosd.droidmind.agent.session.DefaultScenarioExecutor
 import com.cacaosd.droidmind.domain.AgentClientFactory
+import com.cacaosd.droidmind.domain.session.ScenarioExecutor
 import org.koin.dsl.bind
 import org.koin.dsl.module
 import java.util.*
@@ -16,7 +18,7 @@ val agentModule = module {
             toolRegistry = get(),
             aiAgentStrategy = get(),
             eventMapper = get(),
-            agentEventFlow = get(McpMessageFlowQualifier)
+            agentEventFlow = get(AgentMessageFlowQualifier)
         )
     } bind AgentClientFactory::class
 
@@ -33,4 +35,11 @@ val agentModule = module {
         val agentClientFactory = get<AgentClientFactory>()
         agentClientFactory.createCustomModel("qwen3:14b")
     }
+
+    single {
+        DefaultScenarioExecutor(
+            agentClient = get(GoogleAgentQualifier),
+            deviceController = get(AndroidDeviceControllerQualifier)
+        )
+    } bind ScenarioExecutor::class
 }

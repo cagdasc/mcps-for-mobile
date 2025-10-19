@@ -5,8 +5,8 @@ package com.cacaosd.droidmind.feature
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cacaosd.droidmind.adb.device_controller.DeviceController
-import com.cacaosd.droidmind.domain.AgentClient
 import com.cacaosd.droidmind.domain.McpMessage
+import com.cacaosd.droidmind.domain.session.ScenarioExecutor
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.ticker
 import kotlinx.coroutines.flow.*
@@ -18,7 +18,7 @@ private const val DEVICE_POLL_INTERVAL = 5000L
 private const val INSTALLED_PACKAGES_POLL_INTERVAL = 20_000L
 
 class ChatViewModel(
-    private val agentClient: AgentClient,
+    private val scenarioExecutor: ScenarioExecutor,
     private val mcpMessageFlow: MutableSharedFlow<McpMessage>,
     private val deviceController: DeviceController
 ) : ViewModel() {
@@ -184,19 +184,25 @@ class ChatViewModel(
                 val userMessage = prompt
                 val serial = selectedDevice?.serial
                 val packageName = selectedApp?.packageName
-                val scenario = if (serial == null || packageName == null) {
-                    mcpMessageFlow.emit(
-                        McpMessage.Response.Assistant(
-                            content = "The device or app is not selected. So the scenario will be run in raw mode.",
-                            finishReason = null
-                        )
-                    )
-                    RAW_TEST_SCENARIO_TEMPLATE.format(userMessage).trimIndent()
-                } else {
-                    EXPLICIT_TEST_SCENARIO_TEMPLATE.format(serial, packageName, userMessage).trimIndent()
-                }
-                mcpMessageFlow.emit(McpMessage.Request.User(message = scenario)).also {
-                    agentClient.executePrompt(scenario)
+
+//                val scenario = if (serial == null || packageName == null) {
+//                    mcpMessageFlow.emit(
+//                        McpMessage.Response.Assistant(
+//                            content = "The device or app is not selected. So the scenario will be run in raw mode.",
+//                            finishReason = null
+//                        )
+//                    )
+//                    RAW_TEST_SCENARIO_TEMPLATE.format(userMessage).trimIndent()
+//                } else {
+//                    EXPLICIT_TEST_SCENARIO_TEMPLATE.format(serial, packageName, userMessage).trimIndent()
+//                } + RESULT_PREPARATION.trim()
+
+                if (serial != null && packageName != null) {
+                    val scenario = EXPLICIT_TEST_SCENARIO_TEMPLATE.format(serial, packageName, userMessage)
+                        .trimIndent() + RESULT_PREPARATION.trim()
+                    mcpMessageFlow.emit(McpMessage.Request.User(message = scenario)).also {
+                        scenarioExecutor.execute(deviceSerial = serial, packageName = packageName, prompt = scenario)
+                    }
                 }
             }
         }
@@ -214,7 +220,7 @@ class ChatViewModel(
             _chatScreenUiState.update { state ->
                 state.copy(executionState = ExecutionState.Idle)
             }
-            agentClient.stop()
+//            agentClient.stop()
         }
     }
 
@@ -223,10 +229,16 @@ class ChatViewModel(
             Device serial is %s
             The application package name that will be launched is %s
             The scenario to run: %s
-        """
+            """
 
         private const val RAW_TEST_SCENARIO_TEMPLATE = """
             The scenario to run: %s
-        """
+            """
+
+        private const val RESULT_PREPARATION = """
+            Once you done with the scenario, please:
+            Tell content-desc value of views that you clicked.
+            {VIEW_CLASS} - {CONTENT_DESC} - {X_COORDINATE}x{Y_COORDINATE}
+            """
     }
 }

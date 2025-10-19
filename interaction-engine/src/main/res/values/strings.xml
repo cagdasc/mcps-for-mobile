@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Interaction Engine</string>
+    <string name="accessibility_service_description">User interaction tracking service</string>
+    <string name="accessibility_service_summary">Accessibility-based tracking service. Collect user interactions and
+        save them to a file that is under the Downloads directory.
+    </string>
+</resources>

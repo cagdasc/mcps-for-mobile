@@ -28,8 +28,8 @@ Demo
 
 Example prompt:
 
-> Find search bar in screen, type "First video in YouTube" and send done event. Once you get search results get list in
-> screen and click first element. After that tell me what did you do and what you see in the screen.
+    Find search button in toolbar and click it. Type "First video in YouTube" and send done event. Once you get search 
+    results get list in screen and click first element. After that tell me what did you do and what you see in the screen.
 
 See demo video (or go [demo](demo) directory):
 [![Video thumbnail](demo/demo_cover.png)](https://github.com/user-attachments/assets/85943f11-f6da-4352-9e14-4c15f83ecedc)
