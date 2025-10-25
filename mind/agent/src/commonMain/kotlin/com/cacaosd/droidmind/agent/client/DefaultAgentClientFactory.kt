@@ -12,6 +12,7 @@ import ai.koog.prompt.executor.ollama.client.OllamaClient
 import ai.koog.prompt.executor.ollama.client.toLLModel
 import ai.koog.prompt.tokenizer.SimpleRegexBasedTokenizer
 import com.cacaosd.droidmind.agent.event.EventMapper
+import com.cacaosd.droidmind.core.logging.Logger
 import com.cacaosd.droidmind.domain.AgentClient
 import com.cacaosd.droidmind.domain.AgentClientFactory
 import com.cacaosd.droidmind.domain.McpMessage
@@ -84,11 +85,11 @@ class DefaultAgentClientFactory(
     private fun GraphAIAgent.FeatureContext.installEventHandler() {
         install(EventHandler) {
             onAgentStarting {
-                println("Agent is starting...")
+                Logger.info("Agent is starting...")
             }
 
             onAgentCompleted {
-                println("Agent has finished execution.")
+                Logger.info("Agent has finished execution.")
             }
 
             onLLMCallCompleted { context ->

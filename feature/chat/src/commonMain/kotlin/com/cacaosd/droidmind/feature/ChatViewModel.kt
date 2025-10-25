@@ -216,11 +216,9 @@ class ChatViewModel(
 
     private fun stopScenario() {
         viewModelScope.launch(Dispatchers.Default) {
-            println(currentCoroutineContext())
             _chatScreenUiState.update { state ->
                 state.copy(executionState = ExecutionState.Idle)
             }
-//            agentClient.stop()
         }
     }
 

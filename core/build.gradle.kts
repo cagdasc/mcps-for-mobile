@@ -9,6 +9,8 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(libs.logging.kotlin)
+            implementation(libs.logging.logback.classic)
             implementation(libs.kotlinx.datetime)
         }
 

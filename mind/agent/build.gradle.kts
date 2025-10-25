@@ -8,6 +8,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            implementation(project(":core"))
             implementation(project(":mind:adb"))
             implementation(project(":mind:domain"))
             implementation(libs.ai.koog)
